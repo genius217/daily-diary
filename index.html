@@ -1667,12 +1667,10 @@ input[type="range"]::-moz-range-thumb {
 
   function recordColorChange() {
     const pos = inputContent.selectionStart || inputContent.value.length;
-    // Remove any existing point at the same or later position that matches current color
+    // Keep points before cursor, remove those at/after (we'll replace from here)
     colorChangePoints = colorChangePoints.filter(p => p.pos < pos);
-    // Add new change point if color is non-empty ('' = default black)
-    if (currentFontColor) {
-      colorChangePoints.push({ pos, color: currentFontColor });
-    }
+    // Always push a point — even '' (default) matters, it resets color from this position
+    colorChangePoints.push({ pos, color: currentFontColor });
   }
 
   function updateColorOverlay() {
@@ -1786,8 +1784,12 @@ input[type="range"]::-moz-range-thumb {
 
   // Convert stored colorRuns to changePoints for editing
   function colorRunsToPoints(runs) {
-    if (!runs || runs.length <= 1) return [];
+    if (!runs || runs.length === 0) return [];
     const points = [];
+    // If first run has a color, add a point at position 0
+    if (runs[0].color) {
+      points.push({ pos: 0, color: runs[0].color });
+    }
     for (let i = 1; i < runs.length; i++) {
       if (runs[i].color !== runs[i-1].color) {
         points.push({ pos: runs[i].start, color: runs[i].color });
