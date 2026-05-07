@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>每日日记 — 记录每一天</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ========== CSS Variables ========== */
+:root {
+  --bg: #FFF8F0;
+  --bg-card: rgba(255, 248, 240, 0.75);
+  --text: #2C2C2C;
+  --text-secondary: #8C8C8C;
+  --text-muted: #B8B8B8;
+  --primary: #D4A574;
+  --primary-hover: #C49464;
+  --primary-light: rgba(212, 165, 116, 0.12);
+  --border: rgba(0,0,0,0.06);
+  --shadow: 0 8px 32px rgba(0,0,0,0.06);
+  --shadow-hover: 0 12px 48px rgba(0,0,0,0.10);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font-serif: 'Noto Serif SC', 'Songti SC', serif;
+  --font-sans: 'Inter', -apple-system, 'PingFang SC', sans-serif;
+  --max-w: 720px;
+  --header-h: 60px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========== Reset ========== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: var(--bg);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #FFF8F0 0%, #F5EDE0 50%, #F0E8D8 100%);
+  transition: opacity 0.6s ease;
+}
+body.has-custom-bg::before { opacity: 0; }
+input, textarea, button, select { font-family: inherit; font-size: inherit; border: none; outline: none; }
+button { cursor: pointer; background: none; }
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+
+/* ========== Layout ========== */
+.app-container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 20px 40px;
+}
+
+/* ========== Header ========== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-h);
+  padding: 0 4px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 248, 240, 0.8);
+  margin-bottom: 24px;
+}
+.header-title {
+  font-family: var(--font-serif);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-title .icon { font-size: 1.5rem; }
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.header-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+.header-btn:hover {
+  background: var(--primary-light);
+  color: var(--text);
+}
+.header-btn.active {
+  background: var(--primary);
+  color: #fff;
+}
+.header-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* ========== Tabs ========== */
+.tab-content { display: none; animation: fadeSlideIn 0.35s ease; }
+.tab-content.active { display: block; }
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== Cards ========== */
+.card {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: box-shadow var(--transition);
+}
+
+/* ========== Date Header ========== */
+.date-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.date-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.date-display .date-icon { font-size: 1.5rem; }
+.date-display .date-text {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+.date-display .date-weekday {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* ========== Mood Selector ========== */
+.mood-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.mood-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+.mood-btn {
+  font-size: 1.3rem;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition);
+  opacity: 0.4;
+  transform: scale(0.9);
+}
+.mood-btn:hover { opacity: 0.7; transform: scale(1.1); background: var(--primary-light); }
+.mood-btn.active { opacity: 1; transform: scale(1.1); background: var(--primary-light); }
+
+/* ========== Form ========== */
+.form-group { margin-bottom: 16px; }
+.form-group:last-of-type { margin-bottom: 0; }
+
+.input-title {
+  width: 100%;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  padding: 12px 0;
+  background: transparent;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
+  transition: border-color var(--transition);
+}
+.input-title::placeholder { color: var(--text-muted); }
+.input-title:focus { border-color: var(--primary); }
+
+.textarea-content {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px 0;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--text);
+  font-size: 1rem;
+  line-height: 1.8;
+  resize: vertical;
+  font-family: var(--font-sans);
+  position: relative;
+  z-index: 1;
+}
+.textarea-content::placeholder { color: var(--text-muted); }
+
+/* Color overlay behind textarea text */
+.color-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 12px 0;
+  font-size: 1rem;
+  line-height: 1.8;
+  font-family: var(--font-sans);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  pointer-events: none;
+  overflow: hidden;
+  min-height: 200px;
+  color: var(--text);
+  z-index: 0;
+}
+
+/* ========== Image Upload ========== */
+.image-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.image-preview-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.image-preview-item {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.image-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-preview-item .img-del {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--transition);
+  cursor: pointer;
+}
+.image-preview-item:hover .img-del { opacity: 1; }
+.image-upload-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-sm);
+  border: 2px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 1.8rem;
+  transition: all var(--transition);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.image-upload-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-light);
+}
+
+/* ========== Action Bar ========== */
+/* Color picker bar */
+.color-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+  padding: 8px 0;
+}
+.color-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  flex-shrink: 0;
+}
+.color-swatch:hover { transform: scale(1.2); }
+.color-swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--text); }
+
+.action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.action-left, .action-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--transition);
+}
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+
+.btn-ghost {
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  background: var(--primary-light);
+  color: var(--text);
+  border-color: var(--primary);
+}
+.btn-danger {
+  color: #e74c3c;
+  background: rgba(231, 76, 60, 0.08);
+}
+.btn-danger:hover { background: rgba(231, 76, 60, 0.15); }
+
+.btn-voice {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  background: var(--primary-light);
+  color: var(--primary);
+  transition: all var(--transition);
+  position: relative;
+}
+.btn-voice:hover { background: var(--primary); color: #fff; }
+.btn-voice.recording {
+  background: #e74c3c;
+  color: #fff;
+  animation: voicePulse 1.2s ease-in-out infinite;
+}
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+}
+
+.voice-status {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  min-width: 60px;
+}
+.voice-status.recording { color: #e74c3c; }
+
+/* ========== Toast ========== */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--text);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.35s ease;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ========== History ========== */
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.history-title {
+  font-family: var(--font-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.entry-card {
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.entry-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+.entry-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.entry-card-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.entry-card-date .mood { font-size: 1.1rem; }
+.entry-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  flex: 1;
+}
+.entry-card-preview {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+}
+.entry-card-images {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+.entry-card-images img {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+.entry-images-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ========== Entry Detail (expanded) ========== */
+.entry-detail {
+  display: none;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.entry-detail.open { display: block; animation: fadeSlideIn 0.3s ease; }
+.entry-detail-content {
+  font-size: 0.95rem;
+  line-height: 1.9;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+}
+.entry-detail-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.entry-detail-images img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform var(--transition);
+}
+.entry-detail-images img:hover {
+  transform: scale(1.05);
+}
+.entry-detail-time {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+/* ========== Replies ========== */
+/* ========== Crop Modal ========== */
+.crop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+}
+.crop-overlay.open { display: flex; }
+.crop-wrap {
+  position: relative;
+  max-width: 95vw;
+  max-height: 70vh;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  line-height: 0;
+  user-select: none;
+}
+.crop-wrap img {
+  display: block;
+  max-width: 95vw;
+  max-height: 70vh;
+}
+.crop-frame {
+  position: absolute;
+  border: 2px dashed #fff;
+  cursor: move;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+  top: 15%;
+  left: 15%;
+  width: 70%;
+  height: 70%;
+}
+.crop-frame.dragging { border-color: var(--primary); }
+.crop-handle {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  z-index: 2;
+}
+.crop-handle.tl { top: -8px; left: -8px; cursor: nw-resize; }
+.crop-handle.tr { top: -8px; right: -8px; cursor: ne-resize; }
+.crop-handle.bl { bottom: -8px; left: -8px; cursor: sw-resize; }
+.crop-handle.br { bottom: -8px; right: -8px; cursor: se-resize; }
+.crop-info {
+  color: #fff;
+  font-size: 0.8rem;
+  margin-top: 12px;
+  opacity: 0.7;
+}
+.crop-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+.crop-actions .btn {
+  padding: 10px 28px;
+  font-size: 0.9rem;
+  min-width: 100px;
+  justify-content: center;
+}
+
+/* ========== AI Summary ========== */
+.ai-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border);
+}
+.ai-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ai-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; }
+.ai-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, #D4A574, #B8834A);
+  color: #fff; font-size: 0.85rem; font-weight: 500;
+  transition: all var(--transition); border: none; cursor: pointer;
+}
+.ai-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,165,116,0.4); }
+.ai-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.ai-card {
+  background: linear-gradient(135deg, rgba(212,165,116,0.06), rgba(212,165,116,0.12));
+  border-radius: var(--radius); padding: 24px;
+  border: 1px solid rgba(212,165,116,0.2);
+  line-height: 1.8; font-size: 0.95rem;
+  display: none; white-space: pre-wrap;
+}
+.ai-card.show { display: block; animation: fadeSlideIn 0.4s ease; }
+.ai-card .meta {
+  margin-top: 16px; padding-top: 12px;
+  border-top: 1px solid rgba(212,165,116,0.15);
+  font-size: 0.78rem; color: var(--text-muted);
+}
+.ai-error {
+  color: #e74c3c; font-size: 0.85rem;
+  padding: 12px 16px; background: rgba(231,76,60,0.06);
+  border-radius: var(--radius-sm); margin-top: 10px;
+  display: none;
+}
+.ai-error.show { display: block; }
+.ai-loading {
+  display: none; align-items: center; gap: 10px;
+  padding: 16px; font-size: 0.9rem; color: var(--text-secondary);
+}
+.ai-loading.show { display: flex; }
+.ai-loading .spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== Image Viewer Modal ========== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  cursor: pointer;
+}
+.modal-overlay.open { display: flex; }
+.modal-overlay img {
+  max-width: 100%;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* ========== Background Settings Panel ========== */
+.bg-panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.bg-panel.open { display: flex; }
+.bg-panel-inner {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+}
+.bg-panel-title {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.bg-panel-close {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all var(--transition);
+}
+.bg-panel-close:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+.bg-preview-wrap {
+  width: 100%;
+  height: 120px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  background: #f0ebe3;
+  position: relative;
+}
+.bg-preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: filter 0.2s;
+}
+.bg-preview-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,248,240,var(--bg-opacity, 0.7));
+  pointer-events: none;
+}
+.bg-no-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.control-group { margin-bottom: 18px; }
+.control-group:last-child { margin-bottom: 0; }
+.control-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.control-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+.control-value {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+}
+
+/* Range Slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  outline: none;
+  transition: background 0.2s;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+input[type="range"]::-moz-range-thumb {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--primary); cursor: pointer; border: none;
+}
+
+/* Size options */
+.size-options {
+  display: flex;
+  gap: 8px;
+}
+.size-btn {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: all var(--transition);
+  text-align: center;
+}
+.size-btn:hover { border-color: var(--primary); color: var(--text); }
+.size-btn.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); font-weight: 600; }
+
+/* Position grid */
+.pos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pos-row { display: flex; align-items: center; gap: 10px; }
+.pos-label { font-size: 0.78rem; color: var(--text-muted); width: 16px; text-align: center; }
+.pos-row input[type="range"] { flex: 1; }
+
+.bg-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+.bg-actions .btn { flex: 1; justify-content: center; }
+
+/* ========== Empty State ========== */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+.empty-state .empty-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.empty-state .empty-text {
+  font-size: 1rem;
+}
+
+/* ========== Delete Confirm Modal ========== */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(4px);
+}
+.confirm-overlay.open { display: flex; }
+.confirm-dialog {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 380px;
+  width: 100%;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2);
+  text-align: center;
+}
+.confirm-dialog .confirm-title {
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.confirm-dialog .confirm-desc {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.confirm-dialog .confirm-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+.confirm-dialog .confirm-actions .btn {
+  min-width: 100px;
+  justify-content: center;
+}
+
+/* ========== Empty entry indicator ========== */
+.no-entry-today {
+  text-align: center;
+  padding: 30px 20px;
+  color: var(--text-secondary);
+}
+.no-entry-today .big-icon { font-size: 2.5rem; margin-bottom: 12px; opacity: 0.6; }
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
+
+/* ========== Responsive ========== */
+@media (max-width: 600px) {
+  .app-container { padding: 0 14px 30px; }
+  .card { padding: 18px; }
+  .header { margin-bottom: 16px; }
+  .header-title { font-size: 1.15rem; }
+  .header-btn { padding: 6px 10px; font-size: 0.8rem; }
+  .header-btn .btn-label { display: none; }
+  .date-display .date-text { font-size: 1rem; }
+  .input-title { font-size: 1.1rem; }
+  .textarea-content { min-height: 160px; }
+  .entry-detail-images img { width: 80px; height: 80px; }
+  .image-preview-item, .image-upload-btn { width: 64px; height: 64px; }
+}
+@media (min-width: 768px) {
+  .entry-detail-images img { width: 150px; height: 150px; }
+}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- Image Viewer Modal -->
+<div class="modal-overlay" id="imageViewer"><img id="viewerImage" src="" alt="查看图片"></div>
+
+<!-- Confirm Dialog -->
+<div class="confirm-overlay" id="confirmDialog">
+  <div class="confirm-dialog">
+    <div class="confirm-title">确认删除</div>
+    <div class="confirm-desc" id="confirmDesc">确定要删除这篇日记吗？此操作不可撤销。</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" id="confirmCancel">取消</button>
+      <button class="btn btn-danger" id="confirmOk">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- Background Settings Panel -->
+<div class="bg-panel" id="bgPanel">
+  <div class="bg-panel-inner">
+    <div class="bg-panel-title">
+      <span>🖼️ 背景设置</span>
+      <span class="bg-panel-close" id="bgPanelClose">✕</span>
+    </div>
+    <div class="bg-preview-wrap">
+      <img class="bg-preview-img" id="bgPreviewImg" src="" alt="背景预览" style="display:none">
+      <div class="bg-preview-overlay" id="bgPreviewOverlay"></div>
+      <div class="bg-no-image" id="bgNoImage">暂无自定义背景</div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-label">🌸 模糊度</span>
+        <span class="control-value" id="blurValue">0px</span>
+      </div>
+      <input type="range" id="blurSlider" min="0" max="20" value="0" step="1">
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-label">📐 大小模式</span>
+      </div>
+      <div class="size-options">
+        <button class="size-btn active" data-size="cover">铺满</button>
+        <button class="size-btn" data-size="contain">完整</button>
+        <button class="size-btn" data-size="auto">原大</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-label">📌 位置偏移</span>
+      </div>
+      <div class="pos-grid">
+        <div class="pos-row">
+          <span class="pos-label">↔</span>
+          <input type="range" id="posXSlider" min="0" max="100" value="50" step="1">
+          <span class="control-value" id="posXValue">50%</span>
+        </div>
+        <div class="pos-row">
+          <span class="pos-label">↕</span>
+          <input type="range" id="posYSlider" min="0" max="100" value="50" step="1">
+          <span class="control-value" id="posYValue">50%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="control-header">
+        <span class="control-label">☀ 遮罩透明度</span>
+        <span class="control-value" id="opacityValue">70%</span>
+      </div>
+      <input type="range" id="opacitySlider" min="20" max="95" value="70" step="1">
+    </div>
+
+    <div class="bg-actions">
+      <button class="btn btn-ghost" id="bgResetBtn">↺ 恢复默认</button>
+      <button class="btn btn-primary" id="bgUploadBtn">📷 上传图片</button>
+    </div>
+  </div>
+</div>
+
+<!-- Crop Modal for Background -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-wrap" id="cropWrap">
+    <img id="cropImage" src="" alt="裁剪">
+    <div class="crop-frame" id="cropFrame">
+      <span class="crop-handle tl"></span>
+      <span class="crop-handle tr"></span>
+      <span class="crop-handle bl"></span>
+      <span class="crop-handle br"></span>
+    </div>
+  </div>
+  <div class="crop-info">🖱️ 拖动选区移动 · 拖拽角点缩放</div>
+  <div class="crop-actions">
+    <button class="btn btn-ghost" id="cropCancel" style="color:#fff;border-color:rgba(255,255,255,0.3);">取消</button>
+    <button class="btn btn-primary" id="cropConfirm">✅ 确认裁剪</button>
+  </div>
+</div>
+
+<div class="app-container">
+
+  <!-- ========== Header ========== -->
+  <header class="header">
+    <div class="header-title">
+      <span class="icon">☀</span>
+      每日日记
+    </div>
+    <div class="header-actions">
+      <button class="header-btn" id="btnBg" title="更换背景">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        <span class="btn-label">换背景</span>
+      </button>
+      <button class="header-btn active" id="tabWriteBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>写日记</span>
+      </button>
+      <button class="header-btn" id="tabHistoryBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span>历史</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== Tab: Write ========== -->
+  <div class="tab-content active" id="tabWrite">
+    <div class="card">
+      <div class="date-header">
+        <div class="date-display">
+          <span class="date-icon">📅</span>
+          <span class="date-text" id="displayDate">2026年5月7日</span>
+          <span class="date-weekday" id="displayWeekday">星期四</span>
+        </div>
+        <div class="mood-selector">
+          <span class="mood-label">心情</span>
+          <button class="mood-btn" data-mood="开心" title="开心">😊</button>
+          <button class="mood-btn" data-mood="平静" title="平静">😐</button>
+          <button class="mood-btn" data-mood="难过" title="难过">😢</button>
+          <button class="mood-btn" data-mood="愤怒" title="愤怒">😡</button>
+          <button class="mood-btn" data-mood="疲惫" title="疲惫">😴</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <input class="input-title" id="inputTitle" type="text" placeholder="给今天的日记取个标题..." maxlength="100">
+      </div>
+
+      <div class="form-group" style="position:relative">
+        <div class="color-overlay" id="colorOverlay"></div>
+        <textarea class="textarea-content" id="inputContent" placeholder="今天发生了什么？写下来吧..." rows="8"></textarea>
+      </div>
+
+      <div class="form-group image-section">
+        <div class="image-preview-list" id="imagePreviewList"></div>
+        <button class="image-upload-btn" id="btnAddImage" title="添加图片">+</button>
+        <input type="file" id="imageInput" accept="image/jpeg,image/png,image/webp" style="display:none" multiple>
+      </div>
+
+      <div class="color-bar">
+        <span class="color-label">🎨 字体颜色</span>
+        <button class="color-swatch" data-color="" title="默认" style="background:transparent;border:2px solid var(--border);"></button>
+        <button class="color-swatch" data-color="#E74C3C" title="红色" style="background:#E74C3C"></button>
+        <button class="color-swatch" data-color="#E67E22" title="橙色" style="background:#E67E22"></button>
+        <button class="color-swatch" data-color="#F1C40F" title="黄色" style="background:#F1C40F"></button>
+        <button class="color-swatch" data-color="#2ECC71" title="绿色" style="background:#2ECC71"></button>
+        <button class="color-swatch" data-color="#3498DB" title="蓝色" style="background:#3498DB"></button>
+        <button class="color-swatch" data-color="#9B59B6" title="紫色" style="background:#9B59B6"></button>
+        <button class="color-swatch" data-color="#E91E63" title="粉色" style="background:#E91E63"></button>
+        <button class="color-swatch" data-color="#607D8B" title="灰色" style="background:#607D8B"></button>
+        <button class="color-swatch" data-color="custom" title="更多颜色" style="font-size:0.7rem;color:var(--text-muted);border:1px solid var(--border);background:var(--bg);">+</button>
+        <input type="color" id="customColorPicker" value="#000000" style="display:none">
+      </div>
+
+      <div class="action-bar">
+        <div class="action-left">
+          <button class="btn-voice" id="btnVoice" title="语音输入">🎤</button>
+          <span class="voice-status" id="voiceStatus">点击录音</span>
+        </div>
+        <div class="action-right">
+          <button class="btn btn-primary" id="btnSave">💾 保存日记</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's check -->
+    <div id="todayEntryCheck"></div>
+  </div>
+
+  <!-- ========== Tab: History ========== -->
+  <div class="tab-content" id="tabHistory">
+    <div class="history-header">
+      <span class="history-title">📖 日记历史</span>
+      <span style="font-size:0.85rem;color:var(--text-secondary)" id="historyCount"></span>
+    </div>
+    <div id="historyList"></div>
+
+    <!-- AI Summary -->
+    <div class="ai-section">
+      <div class="ai-header">
+        <span class="ai-title">🤖 AI 智能总结</span>
+        <button class="ai-btn" id="aiSummaryBtn">✨ 生成总结</button>
+      </div>
+      <div class="ai-loading" id="aiLoading">
+        <div class="spinner"></div>
+        <span>AI 正在阅读你的日记...</span>
+      </div>
+      <div class="ai-card" id="aiSummaryCard">
+        <div id="aiSummaryText"></div>
+        <div class="meta" id="aiSummaryMeta">基于你的日记内容生成</div>
+      </div>
+      <div class="ai-error" id="aiError"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Hidden file input for background -->
+<input type="file" id="bgInput" accept="image/jpeg,image/png,image/webp" style="display:none">
+
+<script>
+// ============================================================
+//  DailyDiary App — Full JavaScript
+// ============================================================
+
+(function() {
+  'use strict';
+
+  // ==================== Constants ====================
+  const DB_NAME = 'DailyDiaryDB';
+  const DB_VER = 1;
+  const STORE_ENTRY_IMAGES = 'diary_images';
+  const STORE_BG = 'bg_images';
+  const LS_ENTRIES = 'diary_entries';
+  const LS_DRAFT = 'diary_draft';
+  const BG_KEY = 'bg_image';
+  const WEEKDAYS = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+  const MOOD_MAP = { '开心':'😊', '平静':'😐', '难过':'😢', '愤怒':'😡', '疲惫':'😴' };
+  const MOOD_REVERSE = { '😊':'开心', '😐':'平静', '😢':'难过', '😡':'愤怒', '😴':'疲惫' };
+  const MAX_IMG_W = 1600;
+  const IMG_QUALITY = 0.8;
+
+  // ==================== State ====================
+  let db = null;
+  let entries = [];
+  let currentMood = '';
+  let currentFontColor = '';
+  let editingId = null;  // today's entry id if exists
+  // Per-character color tracking: [{pos: number, color: string}] sorted by pos
+  // pos=0 means from start; color can be '' (default) or a hex color
+  let colorChangePoints = [];
+  let isRecording = false;
+  let recognition = null;
+  let voiceStartIndex = -1;  // track where voice text begins in content
+  let tempImages = []; // { id, dataUrl } for current editing session
+
+  // Confirm dialog promise resolver
+  let confirmResolver = null;
+  let expandedEntryId = null;
+  // Crop state
+  let cropFile = null;
+  let cropActive = false;
+  let cropStartX = 0, cropStartY = 0;
+  let cropStartRect = { left: 0, top: 0, width: 0, height: 0 };
+
+  // Background settings
+  let bgSettings = {
+    blur: 0,
+    size: 'cover',
+    posX: 50,
+    posY: 50,
+    opacity: 70
+  };
+
+  // ==================== DOM refs ====================
+  const $ = id => document.getElementById(id);
+  const toastEl = $('toast');
+  const displayDate = $('displayDate');
+  const displayWeekday = $('displayWeekday');
+  const inputTitle = $('inputTitle');
+  const inputContent = $('inputContent');
+  const imagePreviewList = $('imagePreviewList');
+  const imageInput = $('imageInput');
+  const btnAddImage = $('btnAddImage');
+  const btnSave = $('btnSave');
+  const btnVoice = $('btnVoice');
+  const voiceStatus = $('voiceStatus');
+  const tabWrite = $('tabWrite');
+  const tabHistory = $('tabHistory');
+  const tabWriteBtn = $('tabWriteBtn');
+  const tabHistoryBtn = $('tabHistoryBtn');
+  const historyList = $('historyList');
+  const historyCount = $('historyCount');
+  const todayEntryCheck = $('todayEntryCheck');
+  const bgInput = $('bgInput');
+  const btnBg = $('btnBg');
+  const imageViewer = $('imageViewer');
+  const viewerImage = $('viewerImage');
+  const confirmDialog = $('confirmDialog');
+  const confirmDesc = $('confirmDesc');
+  const confirmOk = $('confirmOk');
+  const confirmCancel = $('confirmCancel');
+  const moodBtns = document.querySelectorAll('.mood-btn');
+  // BG panel refs
+  const bgPanel = $('bgPanel');
+  const bgPanelClose = $('bgPanelClose');
+  const bgPreviewImg = $('bgPreviewImg');
+  const bgPreviewOverlay = $('bgPreviewOverlay');
+  const bgNoImage = $('bgNoImage');
+  const blurSlider = $('blurSlider');
+  const blurValue = $('blurValue');
+  const sizeBtns = document.querySelectorAll('.size-btn');
+  const posXSlider = $('posXSlider');
+  const posXValue = $('posXValue');
+  const posYSlider = $('posYSlider');
+  const posYValue = $('posYValue');
+  const opacitySlider = $('opacitySlider');
+  const opacityValue = $('opacityValue');
+  const bgResetBtn = $('bgResetBtn');
+  const bgUploadBtn = $('bgUploadBtn');
+  const cropOverlay = $('cropOverlay');
+  const cropWrap = $('cropWrap');
+  const cropImage = $('cropImage');
+  const cropFrame = $('cropFrame');
+  const cropConfirm = $('cropConfirm');
+  const cropCancel = $('cropCancel');
+  const colorOverlay = $('colorOverlay');
+
+  // ==================== Toast ====================
+  let toastTimer = null;
+  function showToast(msg, duration = 2200) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration);
+  }
+
+  // ==================== Confirm Dialog ====================
+  function showConfirm(desc) {
+    return new Promise((resolve) => {
+      confirmDesc.textContent = desc;
+      confirmDialog.classList.add('open');
+      confirmResolver = resolve;
+    });
+  }
+  confirmOk.addEventListener('click', () => {
+    confirmDialog.classList.remove('open');
+    if (confirmResolver) { confirmResolver(true); confirmResolver = null; }
+  });
+  confirmCancel.addEventListener('click', () => {
+    confirmDialog.classList.remove('open');
+    if (confirmResolver) { confirmResolver(false); confirmResolver = null; }
+  });
+  confirmDialog.addEventListener('click', (e) => {
+    if (e.target === confirmDialog) {
+      confirmDialog.classList.remove('open');
+      if (confirmResolver) { confirmResolver(false); confirmResolver = null; }
+    }
+  });
+
+  // ==================== Image Viewer ====================
+  imageViewer.addEventListener('click', () => imageViewer.classList.remove('open'));
+
+  // ==================== IndexedDB ====================
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains(STORE_ENTRY_IMAGES)) {
+          d.createObjectStore(STORE_ENTRY_IMAGES, { keyPath: 'id' });
+        }
+        if (!d.objectStoreNames.contains(STORE_BG)) {
+          d.createObjectStore(STORE_BG, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbPut(storeName, obj) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const req = tx.objectStore(storeName).put(obj);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbGet(storeName, key) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readonly');
+      const req = tx.objectStore(storeName).get(key);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbDelete(storeName, key) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readwrite');
+      const req = tx.objectStore(storeName).delete(key);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbGetAll(storeName) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, 'readonly');
+      const req = tx.objectStore(storeName).getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // ==================== Compress Image ====================
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.width, h = img.height;
+          if (w > MAX_IMG_W) { h = h * (MAX_IMG_W / w); w = MAX_IMG_W; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', IMG_QUALITY));
+        };
+        img.onerror = () => reject(new Error('图片加载失败'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('文件读取失败'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ==================== Background ====================
+  function getBgLayer() {
+    let layer = document.getElementById('bgLayer');
+    if (!layer) {
+      layer = document.createElement('div');
+      layer.id = 'bgLayer';
+      layer.style.cssText = 'position:fixed;inset:0;z-index:-2;transition:filter 0.3s, background-image 0.3s;background-repeat:no-repeat;';
+      document.body.prepend(layer);
+    }
+    return layer;
+  }
+  function getBgOverlay() {
+    let overlay = document.getElementById('bgOverlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'bgOverlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:-1;transition:background 0.3s;';
+      document.body.prepend(overlay);
+    }
+    return overlay;
+  }
+
+  function loadBgSettings() {
+    try {
+      const raw = localStorage.getItem('bg_settings');
+      if (raw) Object.assign(bgSettings, JSON.parse(raw));
+    } catch(e) { /* ignore */ }
+  }
+  function saveBgSettings() {
+    localStorage.setItem('bg_settings', JSON.stringify(bgSettings));
+  }
+
+  function applyBackground() {
+    const layer = getBgLayer();
+    const overlay = getBgOverlay();
+    layer.style.filter = `blur(${bgSettings.blur}px)`;
+    layer.style.backgroundSize = bgSettings.size;
+    layer.style.backgroundPosition = `${bgSettings.posX}% ${bgSettings.posY}%`;
+    overlay.style.background = `rgba(255,248,240,${bgSettings.opacity / 100})`;
+  }
+
+  async function loadBackground() {
+    try {
+      const obj = await dbGet(STORE_BG, BG_KEY);
+      if (obj && obj.data) {
+        const layer = getBgLayer();
+        layer.style.backgroundImage = `url(${obj.data})`;
+        layer.style.backgroundAttachment = 'fixed';
+        document.body.classList.add('has-custom-bg');
+        applyBackground();
+      }
+    } catch(e) { /* ignore */ }
+  }
+
+  async function saveBackground(dataUrl) {
+    await dbPut(STORE_BG, { id: BG_KEY, data: dataUrl, updatedAt: Date.now() });
+    const layer = getBgLayer();
+    layer.style.backgroundImage = `url(${dataUrl})`;
+    layer.style.backgroundAttachment = 'fixed';
+    document.body.classList.add('has-custom-bg');
+    applyBackground();
+    updateBgPanelPreview();
+    showToast('✅ 背景已更换');
+  }
+
+  function resetBackground() {
+    return dbDelete(STORE_BG, BG_KEY).then(() => {
+      const layer = document.getElementById('bgLayer');
+      if (layer) layer.style.backgroundImage = '';
+      document.body.style.backgroundImage = '';
+      const overlay = document.getElementById('bgOverlay');
+      if (overlay) overlay.remove();
+      const layerEl = document.getElementById('bgLayer');
+      if (layerEl) layerEl.remove();
+      document.body.classList.remove('has-custom-bg');
+      bgSettings = { blur: 0, size: 'cover', posX: 50, posY: 50, opacity: 70 };
+      saveBgSettings();
+      updateBgPanelUI();
+      showToast('已恢复默认背景');
+    });
+  }
+
+  // ==================== BG Panel UI ====================
+  function openBgPanel() {
+    updateBgPanelUI();
+    updateBgPanelPreview();
+    bgPanel.classList.add('open');
+  }
+
+  function closeBgPanel() {
+    bgPanel.classList.remove('open');
+  }
+
+  function updateBgPanelPreview() {
+    const obj = null;
+    dbGet(STORE_BG, BG_KEY).then(obj => {
+      if (obj && obj.data) {
+        bgPreviewImg.src = obj.data;
+        bgPreviewImg.style.display = 'block';
+        bgNoImage.style.display = 'none';
+        bgPreviewImg.style.filter = `blur(${bgSettings.blur}px)`;
+      } else {
+        bgPreviewImg.style.display = 'none';
+        bgNoImage.style.display = 'flex';
+      }
+    }).catch(() => {
+      bgPreviewImg.style.display = 'none';
+      bgNoImage.style.display = 'flex';
+    });
+  }
+
+  function updateBgPanelUI() {
+    blurSlider.value = bgSettings.blur;
+    blurValue.textContent = bgSettings.blur + 'px';
+    sizeBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.size === bgSettings.size));
+    posXSlider.value = bgSettings.posX;
+    posXValue.textContent = bgSettings.posX + '%';
+    posYSlider.value = bgSettings.posY;
+    posYValue.textContent = bgSettings.posY + '%';
+    opacitySlider.value = bgSettings.opacity;
+    opacityValue.textContent = bgSettings.opacity + '%';
+    // Update preview overlay
+    bgPreviewOverlay.style.background = `rgba(255,248,240,${bgSettings.opacity / 100})`;
+  }
+
+  function applyBgSettingAndPersist() {
+    applyBackground();
+    saveBgSettings();
+    updateBgPanelUI();
+  }
+
+  // BG Panel event listeners
+  bgPanelClose.addEventListener('click', closeBgPanel);
+  bgPanel.addEventListener('click', (e) => { if (e.target === bgPanel) closeBgPanel(); });
+
+  blurSlider.addEventListener('input', () => {
+    bgSettings.blur = parseInt(blurSlider.value);
+    applyBgSettingAndPersist();
+    // Update preview image blur
+    bgPreviewImg.style.filter = `blur(${bgSettings.blur}px)`;
+  });
+
+  sizeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      bgSettings.size = btn.dataset.size;
+      sizeBtns.forEach(b => b.classList.toggle('active', b === btn));
+      applyBgSettingAndPersist();
+      updateBgPanelPreview();
+    });
+  });
+
+  posXSlider.addEventListener('input', () => {
+    bgSettings.posX = parseInt(posXSlider.value);
+    applyBgSettingAndPersist();
+  });
+  posYSlider.addEventListener('input', () => {
+    bgSettings.posY = parseInt(posYSlider.value);
+    applyBgSettingAndPersist();
+  });
+
+  opacitySlider.addEventListener('input', () => {
+    bgSettings.opacity = parseInt(opacitySlider.value);
+    bgPreviewOverlay.style.background = `rgba(255,248,240,${bgSettings.opacity / 100})`;
+    applyBgSettingAndPersist();
+  });
+
+  bgResetBtn.addEventListener('click', async () => {
+    const hasBg = await dbGet(STORE_BG, BG_KEY).catch(() => null);
+    if (hasBg) {
+      await resetBackground();
+      updateBgPanelPreview();
+      closeBgPanel();
+    } else {
+      // No background set, just reset settings
+      bgSettings = { blur: 0, size: 'cover', posX: 50, posY: 50, opacity: 70 };
+      saveBgSettings();
+      applyBackground();
+      updateBgPanelUI();
+      updateBgPanelPreview();
+      showToast('已恢复默认设置');
+    }
+  });
+
+  bgUploadBtn.addEventListener('click', () => bgInput.click());
+
+  btnBg.addEventListener('click', (e) => {
+    e.preventDefault();
+    openBgPanel();
+  });
+
+  // ==================== Entries CRUD ====================
+  function loadEntries() {
+    try {
+      const raw = localStorage.getItem(LS_ENTRIES);
+      entries = raw ? JSON.parse(raw) : [];
+    } catch(e) { entries = []; }
+  }
+
+  function saveEntries() {
+    localStorage.setItem(LS_ENTRIES, JSON.stringify(entries));
+  }
+
+  function getTodayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatDateCN(dateStr) {
+    const parts = dateStr.split('-');
+    return `${parts[0]}年${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+  }
+
+  function getWeekday(dateStr) {
+    const d = new Date(dateStr);
+    return WEEKDAYS[d.getDay()];
+  }
+
+  function findTodayEntry() {
+    const today = getTodayStr();
+    return entries.find(e => e.date === today);
+  }
+
+  function getEntryById(id) {
+    return entries.find(e => e.id === id);
+  }
+
+  // ==================== Image ID generation ====================
+  let imgIdCounter = 0;
+  function genImageId() {
+    return 'img_' + Date.now() + '_' + (++imgIdCounter);
+  }
+
+  // ==================== Save Draft ====================
+  function saveDraft() {
+    const draft = {
+      title: inputTitle.value,
+      content: inputContent.value,
+      mood: currentMood,
+      fontColor: currentFontColor,
+      colorChangePoints: colorChangePoints,
+      tempImages: tempImages.map(t => t.id),
+      updatedAt: Date.now()
+    };
+    try { localStorage.setItem(LS_DRAFT, JSON.stringify(draft)); } catch(e) { /* ignore */ }
+  }
+
+  function loadDraft() {
+    try {
+      const raw = localStorage.getItem(LS_DRAFT);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      inputTitle.value = draft.title || '';
+      inputContent.value = draft.content || '';
+      prevContentLen = inputContent.value.length;
+      if (draft.mood) {
+        currentMood = draft.mood;
+        updateMoodUI();
+      }
+      if (draft.fontColor) {
+        currentFontColor = draft.fontColor;
+      }
+      colorChangePoints = draft.colorChangePoints || [];
+      updateColorUI();
+    } catch(e) { /* ignore */ }
+  }
+
+  function clearDraft() {
+    localStorage.removeItem(LS_DRAFT);
+  }
+
+  // ==================== Mood UI ====================
+  function updateMoodUI() {
+    moodBtns.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mood === currentMood);
+    });
+  }
+
+  moodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentMood = (currentMood === btn.dataset.mood) ? '' : btn.dataset.mood;
+      updateMoodUI();
+      saveDraft();
+    });
+  });
+
+  // ==================== Font Color ====================
+  const colorSwatches = document.querySelectorAll('.color-swatch');
+  const customColorPicker = $('customColorPicker');
+
+  function updateColorUI() {
+    colorSwatches.forEach(s => s.classList.toggle('active', s.dataset.color === currentFontColor));
+    // Apply to editor text
+    inputContent.style.color = currentFontColor || '';
+    inputTitle.style.color = currentFontColor || '';
+  }
+
+  function recordColorChange() {
+    const pos = inputContent.selectionStart || inputContent.value.length;
+    // Remove any existing point at the same or later position that matches current color
+    colorChangePoints = colorChangePoints.filter(p => p.pos < pos);
+    // Add new change point if color is non-empty ('' = default black)
+    if (currentFontColor) {
+      colorChangePoints.push({ pos, color: currentFontColor });
+    }
+  }
+
+  function updateColorOverlay() {
+    const content = inputContent.value;
+    const runs = compileColorRuns(content, colorChangePoints);
+    if (!content) {
+      colorOverlay.innerHTML = '';
+      return;
+    }
+    colorOverlay.innerHTML = renderColoredContent(content, runs);
+    // Sync scroll position
+    colorOverlay.scrollTop = inputContent.scrollTop;
+  }
+
+  function updateColorUI() {
+    colorSwatches.forEach(s => s.classList.toggle('active', s.dataset.color === currentFontColor));
+    updateColorOverlay();
+  }
+
+  // Sync overlay scroll with textarea scroll
+  inputContent.addEventListener('scroll', () => {
+    colorOverlay.scrollTop = inputContent.scrollTop;
+  });
+
+  // Track content length before input to detect insert/delete
+  let prevContentLen = 0;
+  inputContent.addEventListener('focus', () => { prevContentLen = inputContent.value.length; });
+
+  inputContent.addEventListener('input', () => {
+    const newLen = inputContent.value.length;
+    const delta = newLen - prevContentLen;
+    const cursorPos = inputContent.selectionStart || 0;
+
+    if (delta !== 0) {
+      // Text was inserted or deleted
+      const insertPos = cursorPos - (delta > 0 ? delta : 0);
+      // Shift all change points after insertPos
+      colorChangePoints = colorChangePoints.map(p => {
+        if (p.pos > insertPos) {
+          return { pos: p.pos + delta, color: p.color };
+        }
+        return p;
+      });
+      // Remove change points that are now at invalid positions
+      colorChangePoints = colorChangePoints.filter(p => p.pos >= 0 && p.pos <= newLen);
+    }
+
+    prevContentLen = newLen;
+    saveDraft();
+    updateColorOverlay();
+  });
+
+  colorSwatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+      if (swatch.dataset.color === 'custom') {
+        customColorPicker.click();
+        return;
+      }
+      currentFontColor = swatch.dataset.color;
+      recordColorChange();
+      updateColorUI();
+      saveDraft();
+    });
+  });
+
+  customColorPicker.addEventListener('input', () => {
+    currentFontColor = customColorPicker.value;
+    recordColorChange();
+    updateColorUI();
+    colorSwatches.forEach(s => s.classList.remove('active'));
+    saveDraft();
+  });
+
+  // ==================== Color Runs ====================
+  // Compile colorChangePoints into colorRuns for storage
+  function compileColorRuns(content, points) {
+    if (!content) return [];
+    if (!points || points.length === 0) return [{ start: 0, end: content.length, color: '' }];
+    const sorted = [...points].sort((a, b) => a.pos - b.pos);
+    const runs = [];
+    let prevPos = 0;
+    let prevColor = '';
+    for (const p of sorted) {
+      if (p.pos > prevPos) {
+        runs.push({ start: prevPos, end: p.pos, color: prevColor });
+      }
+      prevPos = p.pos;
+      prevColor = p.color;
+    }
+    if (prevPos < content.length) {
+      runs.push({ start: prevPos, end: content.length, color: prevColor });
+    }
+    return runs;
+  }
+
+  // Render content with color runs as HTML
+  function renderColoredContent(content, colorRuns) {
+    if (!content) return '';
+    if (!colorRuns || colorRuns.length === 0) return escapeHtml(content);
+    let html = '';
+    for (const run of colorRuns) {
+      const text = escapeHtml(content.slice(run.start, run.end));
+      if (run.color) {
+        html += `<span style="color:${run.color}">${text}</span>`;
+      } else {
+        html += text;
+      }
+    }
+    return html;
+  }
+
+  // Convert stored colorRuns to changePoints for editing
+  function colorRunsToPoints(runs) {
+    if (!runs || runs.length <= 1) return [];
+    const points = [];
+    for (let i = 1; i < runs.length; i++) {
+      if (runs[i].color !== runs[i-1].color) {
+        points.push({ pos: runs[i].start, color: runs[i].color });
+      }
+    }
+    return points;
+  }
+
+  // ==================== Date Display ====================
+  function updateDateDisplay() {
+    const today = getTodayStr();
+    displayDate.textContent = formatDateCN(today);
+    displayWeekday.textContent = getWeekday(today);
+  }
+
+  // ==================== Today Entry Check ====================
+  function checkTodayEntry() {
+    const today = getTodayStr();
+    const todayEntries = entries.filter(e => e.date === today);
+    if (todayEntries.length > 0) {
+      todayEntryCheck.innerHTML = `
+        <div class="card" style="padding:14px 18px;">
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;">📝 今天已有 ${todayEntries.length} 篇日记</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            ${todayEntries.slice(0,5).map(e => `
+              <span style="font-size:0.82rem;color:var(--text);background:var(--primary-light);padding:3px 10px;border-radius:6px;cursor:pointer;" onclick="window._editEntry('${e.id}')">${e.title || '无标题'}</span>
+            `).join('')}
+            ${todayEntries.length > 5 ? `<span style="font-size:0.82rem;color:var(--text-muted)">+${todayEntries.length-5} 篇</span>` : ''}
+          </div>
+        </div>
+      `;
+    } else {
+      todayEntryCheck.innerHTML = '';
+    }
+  }
+
+  async function loadEntryImages(entry) {
+    tempImages = [];
+    if (entry.images && entry.images.length) {
+      for (const imgId of entry.images) {
+        try {
+          const obj = await dbGet(STORE_ENTRY_IMAGES, imgId);
+          if (obj) tempImages.push({ id: obj.id, dataUrl: obj.data });
+        } catch(e) { /* skip */ }
+      }
+    }
+    renderImagePreview();
+  }
+
+  // Make viewTodayEntry globally accessible for inline onclick
+  window._viewTodayEntry = function() {
+    switchTab('write');
+  };
+
+  // ==================== Image Preview ====================
+  function renderImagePreview() {
+    imagePreviewList.innerHTML = '';
+    tempImages.forEach((img, idx) => {
+      const div = document.createElement('div');
+      div.className = 'image-preview-item';
+      div.innerHTML = `<img src="${img.dataUrl}" alt="图片">`;
+      const del = document.createElement('button');
+      del.className = 'img-del';
+      del.textContent = '✕';
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        tempImages.splice(idx, 1);
+        renderImagePreview();
+        saveDraft();
+      });
+      div.appendChild(del);
+      div.addEventListener('click', () => {
+        viewerImage.src = img.dataUrl;
+        imageViewer.classList.add('open');
+      });
+      imagePreviewList.appendChild(div);
+    });
+    btnAddImage.style.display = tempImages.length >= 9 ? 'none' : 'flex';
+  }
+
+  // ==================== Image Upload (Entry) ====================
+  btnAddImage.addEventListener('click', () => imageInput.click());
+  imageInput.addEventListener('change', async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    const remaining = 9 - tempImages.length;
+    if (remaining <= 0) { showToast('最多上传 9 张图片'); return; }
+    const toProcess = files.slice(0, remaining);
+    for (const file of toProcess) {
+      try {
+        const dataUrl = await compressImage(file);
+        const id = genImageId();
+        await dbPut(STORE_ENTRY_IMAGES, { id, data: dataUrl, createdAt: Date.now() });
+        tempImages.push({ id, dataUrl });
+      } catch(err) {
+        showToast('图片处理失败: ' + err.message);
+      }
+    }
+    renderImagePreview();
+    saveDraft();
+    imageInput.value = '';
+  });
+
+  // ==================== Voice Input ====================
+  let voiceSupported = false;
+
+  function createRecognizer() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return null;
+    const recog = new SR();
+    recog.lang = 'zh-CN';
+    recog.continuous = true;
+    recog.interimResults = true;
+
+    recog.onstart = () => {
+      voiceStatus.textContent = '聆听中...说完了停顿一下';
+    };
+
+    recog.onresult = (e) => {
+      try {
+        console.log('onresult called, results.length:', e.results.length, 'isRecording:', isRecording);
+        let fullTranscript = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const alt = e.results[i][0];
+          const text = alt ? alt.transcript : '';
+          console.log('  result[' + i + ']:', JSON.stringify(text), 'isFinal:', e.results[i].isFinal);
+          fullTranscript += text;
+        }
+        console.log('  fullTranscript:', JSON.stringify(fullTranscript));
+        if (!fullTranscript) return;
+
+        if (voiceStartIndex === -1) {
+          voiceStartIndex = inputContent.value.length;
+          // Add a space if content is not empty and doesn't end with newline
+          if (voiceStartIndex > 0 && !inputContent.value.endsWith('\n')) {
+            inputContent.value += '\n';
+            voiceStartIndex = inputContent.value.length;
+          }
+        }
+        const before = inputContent.value.substring(0, voiceStartIndex);
+        inputContent.value = before + fullTranscript;
+        inputContent.scrollTop = inputContent.scrollHeight;
+        saveDraft();
+        updateColorOverlay();
+      } catch(err) {
+        console.error('onresult error:', err);
+      }
+    };
+
+    recog.onerror = (e) => {
+      console.warn('Voice error:', e.error, e.message || '');
+      const err = e.error;
+      // Ignore aborted from old instances after restart
+      if (err === 'aborted' && recognition !== recog) return;
+      if (err === 'not-allowed') {
+        showToast('请允许使用麦克风权限（点击浏览器地址栏左侧的🔒设置）');
+      } else if (err === 'no-speech') {
+        // silent
+        return;
+      } else if (err === 'aborted') {
+        showToast('语音服务不可用，请检查：1) Windows 设置中开启"在线语音识别" 2) Chrome 版本是否支持');
+      } else if (err === 'audio-capture') {
+        showToast('未检测到麦克风，请检查设备连接');
+      } else if (err === 'network') {
+        showToast('语音识别需要网络连接，请检查网络');
+      } else if (err === 'service-not-allowed') {
+        showToast('语音服务被阻止，请使用 Chrome 浏览器并通过 HTTPS 访问');
+      } else if (err === 'language-not-supported') {
+        showToast('当前浏览器不支持中文语音识别');
+      } else {
+        showToast('语音识别出错: ' + err);
+      }
+      stopVoice();
+    };
+
+    recog.onend = () => {
+      if (isRecording) {
+        // Advance voice start so new session appends instead of overwriting
+        voiceStartIndex = inputContent.value.length;
+        // Auto-restart: must create fresh instance
+        const next = createRecognizer();
+        if (next) {
+          recognition = next;
+          try { next.start(); } catch(e) { stopVoice(); }
+        }
+      }
+    };
+
+    return recog;
+  }
+
+  function initVoice() {
+    voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    if (!voiceSupported) {
+      btnVoice.style.display = 'none';
+      voiceStatus.textContent = '语音不支持';
+    }
+  }
+
+  function startVoice() {
+    if (!voiceSupported) { showToast('浏览器不支持语音识别'); return; }
+    try {
+      // Always create a fresh instance (old one can't be reliably restarted)
+      const recog = createRecognizer();
+      if (!recog) { showToast('语音识别初始化失败'); return; }
+      recognition = recog;
+      recog.start();
+      isRecording = true;
+      voiceStartIndex = -1;
+      btnVoice.classList.add('recording');
+      voiceStatus.textContent = '正在聆听...';
+      voiceStatus.classList.add('recording');
+    } catch(e) {
+      console.error('Voice start failed:', e);
+      showToast('无法启动语音识别');
+    }
+  }
+
+  function stopVoice() {
+    isRecording = false;
+    btnVoice.classList.remove('recording');
+    voiceStatus.textContent = '点击录音';
+    voiceStatus.classList.remove('recording');
+    if (recognition) {
+      try { recognition.abort(); } catch(e) { /* ignore */ }
+      recognition = null;
+    }
+  }
+
+  btnVoice.addEventListener('click', () => {
+    if (isRecording) { stopVoice(); }
+    else { startVoice(); }
+  });
+
+  // ==================== Save Entry ====================
+  btnSave.addEventListener('click', async () => {
+    const title = inputTitle.value.trim();
+    const content = inputContent.value.trim();
+    if (!title && !content) {
+      showToast('写点什么再保存吧');
+      return;
+    }
+
+    const today = getTodayStr();
+    const imageIds = tempImages.map(t => t.id);
+
+    if (editingId) {
+      // Update existing
+      const entry = getEntryById(editingId);
+      if (entry) {
+        // Remove images no longer used
+        const oldImages = entry.images || [];
+        const removed = oldImages.filter(id => !imageIds.includes(id));
+        for (const id of removed) {
+          try { await dbDelete(STORE_ENTRY_IMAGES, id); } catch(e) { /* ignore */ }
+        }
+        entry.title = title;
+        entry.content = content;
+        entry.mood = currentMood;
+        entry.fontColor = currentFontColor;
+        entry.colorRuns = compileColorRuns(content, colorChangePoints);
+        entry.images = imageIds;
+        entry.updatedAt = new Date().toISOString();
+      }
+    } else {
+      // New entry
+      const entry = {
+        id: 'entry_' + Date.now(),
+        date: today,
+        title: title,
+        content: content,
+        mood: currentMood,
+        images: imageIds,
+        fontColor: currentFontColor,
+        colorRuns: compileColorRuns(content, colorChangePoints),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      entries.push(entry);
+      // Show edit link for the just-saved entry
+      showToast('✅ 已保存');
+      // Add quick action
+      let qa = document.getElementById('saveQuickActions');
+      if (!qa) {
+        qa = document.createElement('div');
+        qa.id = 'saveQuickActions';
+        qa.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
+        document.querySelector('.card').prepend(qa);
+      }
+      qa.innerHTML = `
+        <span style="font-size:0.85rem;color:var(--text-secondary);padding:4px 0;">✅ 已保存</span>
+        <button class="btn btn-ghost" style="font-size:0.8rem;padding:4px 10px;" onclick="window._editEntry('${entry.id}')">✏️ 编辑</button>
+        <button class="btn btn-ghost" style="font-size:0.8rem;padding:4px 10px;" onclick="window._newEntry()">➕ 再写一篇</button>
+      `;
+    }
+
+    saveEntries();
+    clearDraft();
+    btnSave.innerHTML = '💾 保存日记';
+    checkTodayEntry();
+    renderHistory();
+  });
+
+  // ==================== Delete Entry ====================
+  async function deleteEntry(id) {
+    const entry = getEntryById(id);
+    if (!entry) return;
+    const ok = await showConfirm(`确定要删除 ${formatDateCN(entry.date)} 的日记吗？`);
+    if (!ok) return;
+
+    // Remove associated images
+    const imgIds = entry.images || [];
+    for (const imgId of imgIds) {
+      try { await dbDelete(STORE_ENTRY_IMAGES, imgId); } catch(e) { /* ignore */ }
+    }
+
+    entries = entries.filter(e => e.id !== id);
+    saveEntries();
+    if (editingId === id) {
+      editingId = null;
+      inputTitle.value = '';
+      inputContent.value = '';
+      currentMood = '';
+      updateMoodUI();
+      tempImages = [];
+      renderImagePreview();
+      checkTodayEntry();
+    }
+    showToast('已删除');
+    renderHistory();
+  }
+
+  // ==================== Edit Entry ====================
+  window._editEntry = function(id) {
+    const entry = getEntryById(id);
+    if (!entry) return;
+    editingId = id;
+    inputTitle.value = entry.title || '';
+    inputContent.value = entry.content || '';
+    prevContentLen = inputContent.value.length;
+    currentMood = entry.mood || '';
+    currentFontColor = entry.fontColor || '';
+    colorChangePoints = colorRunsToPoints(entry.colorRuns || []);
+    updateMoodUI();
+    updateColorUI();
+    loadEntryImages(entry);
+    switchTab('write');
+    inputContent.focus();
+    btnSave.innerHTML = '💾 更新日记';
+  };
+
+  window._newEntry = function() {
+    editingId = null;
+    inputTitle.value = '';
+    inputContent.value = '';
+    currentMood = '';
+    currentFontColor = '';
+    colorChangePoints = [];
+    if (colorOverlay) colorOverlay.innerHTML = '';
+    updateMoodUI();
+    updateColorUI();
+    tempImages = [];
+    renderImagePreview();
+    clearDraft();
+    btnSave.innerHTML = '💾 保存日记';
+    const qa = document.getElementById('saveQuickActions');
+    if (qa) qa.remove();
+    switchTab('write');
+    inputTitle.focus();
+  };
+
+  // ==================== Tab Switching ====================
+  function switchTab(tab) {
+    if (tab === 'write') {
+      tabWrite.classList.add('active');
+      tabHistory.classList.remove('active');
+      tabWriteBtn.classList.add('active');
+      tabHistoryBtn.classList.remove('active');
+    } else {
+      tabWrite.classList.remove('active');
+      tabHistory.classList.add('active');
+      tabWriteBtn.classList.remove('active');
+      tabHistoryBtn.classList.add('active');
+      renderHistory();
+    }
+  }
+
+  tabWriteBtn.addEventListener('click', () => switchTab('write'));
+  tabHistoryBtn.addEventListener('click', () => switchTab('history'));
+
+  // ==================== History Render ====================
+  function renderHistory() {
+    if (entries.length === 0) {
+      historyList.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📖</div>
+          <div class="empty-text">还没有写过日记<br>去写第一篇吧 ✨</div>
+        </div>
+      `;
+      historyCount.textContent = '';
+      return;
+    }
+
+    // Sort by date descending
+    const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+    historyCount.textContent = `共 ${entries.length} 篇`;
+
+    historyList.innerHTML = sorted.map(entry => {
+      const dateCN = formatDateCN(entry.date);
+      const wd = getWeekday(entry.date);
+      const moodIcon = entry.mood ? MOOD_MAP[entry.mood] || '' : '';
+      const preview = (entry.content || '').slice(0, 80);
+      const imgCount = (entry.images || []).length;
+      const imageHtml = imgCount > 0 ? `<div class="entry-card-images"><span class="entry-images-count">📷 ${imgCount} 张</span></div>` : '';
+
+      const colorRuns = entry.colorRuns || [];
+      const coloredContent = renderColoredContent(entry.content || '', colorRuns);
+      const coloredPreview = renderColoredContent((entry.content || '').slice(0, 80), colorRuns);
+
+      return `
+        <div class="card entry-card" data-id="${entry.id}" onclick="window._toggleEntryDetail('${entry.id}')">
+          <div class="entry-card-header">
+            <div class="entry-card-date">
+              <span>${dateCN}</span>
+              <span>${wd}</span>
+              ${moodIcon ? `<span class="mood">${moodIcon}</span>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);">
+              <span class="entry-del-btn" onclick="event.stopPropagation();window._deleteEntry('${entry.id}')" style="cursor:pointer;padding:2px 6px;border-radius:4px;">🗑</span>
+            </div>
+          </div>
+          <div class="entry-card-title">${entry.title || '无标题'}</div>
+          <div class="entry-card-preview">${coloredPreview}${entry.content && entry.content.length > 80 ? '...' : ''}</div>
+          ${imageHtml}
+          <div class="entry-detail" id="detail_${entry.id}">
+            <div class="entry-detail-time">🕐 ${formatTime(entry.createdAt)}</div>
+            <div style="text-align:right;margin-bottom:8px;">
+              <span class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;" onclick="event.stopPropagation();window._editEntry('${entry.id}')">✏️ 编辑</span>
+            </div>
+            <div class="entry-detail-content">${coloredContent}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Re-expand previously expanded entry
+    if (expandedEntryId) {
+      const detailEl = document.getElementById('detail_' + expandedEntryId);
+      if (detailEl) {
+        detailEl.classList.add('open');
+        const entry = getEntryById(expandedEntryId);
+        if (entry) loadDetailImages(entry);
+      }
+    }
+    // Also load images for any other expanded entries (safety)
+    sorted.forEach(entry => {
+      const detailEl = document.getElementById('detail_' + entry.id);
+      if (detailEl && detailEl.classList.contains('open')) {
+        loadDetailImages(entry);
+      }
+    });
+  }
+
+  async function loadDetailImages(entry) {
+    const container = document.getElementById('detailImgs_' + entry.id);
+    if (!container || (entry.images || []).length === 0) {
+      if (container) container.innerHTML = '<div style="font-size:0.85rem;color:var(--text-muted)">无配图</div>';
+      return;
+    }
+    container.innerHTML = '加载中...';
+    let html = '';
+    for (const imgId of entry.images) {
+      try {
+        const obj = await dbGet(STORE_ENTRY_IMAGES, imgId);
+        if (obj) {
+          html += `<img src="${obj.data}" alt="" onclick="window._viewImage('${obj.data}')">`;
+        }
+      } catch(e) { /* skip */ }
+    }
+    container.innerHTML = html || '<span style="font-size:0.85rem;color:var(--text-muted)">图片加载失败</span>';
+  }
+
+  // Global functions for inline onclick
+  window._toggleEntryDetail = async function(id) {
+    const detail = document.getElementById('detail_' + id);
+    if (!detail) return;
+    const isOpen = detail.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.entry-detail').forEach(el => el.classList.remove('open'));
+    expandedEntryId = isOpen ? null : id;
+    if (!isOpen) {
+      detail.classList.add('open');
+      const entry = getEntryById(id);
+      if (entry) loadDetailImages(entry);
+    }
+  };
+
+  window._viewImage = function(dataUrl) {
+    viewerImage.src = dataUrl;
+    imageViewer.classList.add('open');
+  };
+
+  window._deleteEntry = function(id) {
+    deleteEntry(id);
+  };
+
+  // ==================== Utilities ====================
+  function formatTime(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    const h = String(d.getHours()).padStart(2,'0');
+    const m = String(d.getMinutes()).padStart(2,'0');
+    return `${h}:${m}`;
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ==================== Background Upload ====================
+  btnBg.addEventListener('click', async () => {
+    // Check if background exists and offer reset option
+    try {
+      const existing = await dbGet(STORE_BG, BG_KEY);
+      if (existing) {
+        const action = await showConfirm('已有自定义背景，点击"确定"更换新图片，点击"取消"恢复默认');
+        if (!action) {
+          await resetBackground();
+          return;
+        }
+      }
+    } catch(e) { /* ignore */ }
+    bgInput.click();
+  });
+
+  bgInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    cropFile = file;
+    cropOverlay.classList.add('open'); // Show overlay FIRST so dimensions are available
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      cropImage.onload = () => {
+        // Image loaded, now measure and set initial frame
+        const cw = cropWrap.clientWidth;
+        const ch = cropWrap.clientHeight;
+        // Initial frame: 60% of image, centered
+        const pct = 0.6;
+        const fw = Math.round(cw * pct);
+        const fh = Math.round(ch * pct);
+        const fl = Math.round((cw - fw) / 2);
+        const ft = Math.round((ch - fh) / 2);
+        cropStartRect = { left: fl, top: ft, width: fw, height: fh };
+        cropFrame.style.left = fl + 'px';
+        cropFrame.style.top = ft + 'px';
+        cropFrame.style.width = fw + 'px';
+        cropFrame.style.height = fh + 'px';
+      };
+      cropImage.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    bgInput.value = '';
+  });
+
+  // ==================== Crop Logic ====================
+  // Always calculate from cropStartRect + current delta for smooth dragging
+  function applyCropRect(r) {
+    r.left = Math.round(r.left);
+    r.top = Math.round(r.top);
+    r.width = Math.round(r.width);
+    r.height = Math.round(r.height);
+    cropFrame.style.left = r.left + 'px';
+    cropFrame.style.top = r.top + 'px';
+    cropFrame.style.width = r.width + 'px';
+    cropFrame.style.height = r.height + 'px';
+  }
+
+  function constrain(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+  function doCropDrag(e) {
+    if (!cropActive) return;
+    const dx = e.clientX - cropStartX;
+    const dy = e.clientY - cropStartY;
+    const s = cropStartRect;
+    const cw = cropWrap.clientWidth;
+    const ch = cropWrap.clientHeight;
+    const MIN = 60;
+    let r;
+
+    if (cropActive === 'move') {
+      r = {
+        left: constrain(s.left + dx, 0, cw - s.width),
+        top: constrain(s.top + dy, 0, ch - s.height),
+        width: s.width,
+        height: s.height
+      };
+    } else if (cropActive === 'resize-br') {
+      r = {
+        left: s.left,
+        top: s.top,
+        width: constrain(s.width + dx, MIN, cw - s.left),
+        height: constrain(s.height + dy, MIN, ch - s.top)
+      };
+    } else if (cropActive === 'resize-tl') {
+      const nl = constrain(s.left + dx, 0, s.left + s.width - MIN);
+      const nt = constrain(s.top + dy, 0, s.top + s.height - MIN);
+      r = {
+        left: nl, top: nt,
+        width: s.left + s.width - nl,
+        height: s.top + s.height - nt
+      };
+    } else if (cropActive === 'resize-tr') {
+      const nt = constrain(s.top + dy, 0, s.top + s.height - MIN);
+      r = {
+        left: s.left, top: nt,
+        width: constrain(s.width + dx, MIN, cw - s.left),
+        height: s.top + s.height - nt
+      };
+    } else if (cropActive === 'resize-bl') {
+      const nl = constrain(s.left + dx, 0, s.left + s.width - MIN);
+      r = {
+        left: nl, top: s.top,
+        width: s.left + s.width - nl,
+        height: constrain(s.height + dy, MIN, ch - s.top)
+      };
+    }
+    if (r) applyCropRect(r);
+  }
+
+  // Frame mouse down → move
+  cropFrame.addEventListener('mousedown', (e) => {
+    if (e.target.classList.contains('crop-handle')) return;
+    e.preventDefault();
+    const cs = cropFrame.style;
+    cropStartRect = {
+      left: parseFloat(cs.left) || 0,
+      top: parseFloat(cs.top) || 0,
+      width: parseFloat(cs.width) || 0,
+      height: parseFloat(cs.height) || 0
+    };
+    cropActive = 'move';
+    cropStartX = e.clientX;
+    cropStartY = e.clientY;
+    cropFrame.classList.add('dragging');
+  });
+
+  // Handle mouse down → resize
+  cropFrame.querySelectorAll('.crop-handle').forEach(h => {
+    h.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const dir = Array.from(h.classList).find(c => ['tl','tr','bl','br'].includes(c));
+      if (!dir) return;
+      const cs = cropFrame.style;
+      cropStartRect = {
+        left: parseFloat(cs.left) || 0,
+        top: parseFloat(cs.top) || 0,
+        width: parseFloat(cs.width) || 0,
+        height: parseFloat(cs.height) || 0
+      };
+      cropActive = 'resize-' + dir;
+      cropStartX = e.clientX;
+      cropStartY = e.clientY;
+      cropFrame.classList.add('dragging');
+    });
+  });
+
+  // Global mousemove
+  document.addEventListener('mousemove', doCropDrag);
+
+  // Global mouseup
+  document.addEventListener('mouseup', () => {
+    if (cropActive) {
+      cropActive = false;
+      cropFrame.classList.remove('dragging');
+    }
+  });
+
+  // Touch support for mobile
+  cropFrame.addEventListener('touchstart', (e) => {
+    const touch = e.touches[0];
+    const me = new MouseEvent('mousedown', { clientX: touch.clientX, clientY: touch.clientY });
+    cropFrame.dispatchEvent(me);
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!cropActive) return;
+    const touch = e.touches[0];
+    const me = new MouseEvent('mousemove', { clientX: touch.clientX, clientY: touch.clientY });
+    doCropDrag(me);
+  }, { passive: true });
+  document.addEventListener('touchend', () => {
+    if (cropActive) {
+      cropActive = false;
+      cropFrame.classList.remove('dragging');
+    }
+  }, { passive: true });
+
+  // Confirm crop
+  cropConfirm.addEventListener('click', async () => {
+    if (!cropFile) return;
+    const cs = cropFrame.style;
+    const r = {
+      left: parseFloat(cs.left) || 0,
+      top: parseFloat(cs.top) || 0,
+      width: parseFloat(cs.width) || 0,
+      height: parseFloat(cs.height) || 0
+    };
+    const img = cropImage;
+    const scaleX = img.naturalWidth / img.clientWidth;
+    const scaleY = img.naturalHeight / img.clientHeight;
+    const sx = r.left * scaleX, sy = r.top * scaleY;
+    const sw = r.width * scaleX, sh = r.height * scaleY;
+
+    try {
+      showToast('正在裁剪...');
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.min(sw, MAX_IMG_W);
+      canvas.height = sh * (canvas.width / sw);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY);
+      await saveBackground(dataUrl);
+      cropOverlay.classList.remove('open');
+      closeBgPanel();
+      showToast('✅ 背景已更换');
+    } catch(err) {
+      showToast('裁剪失败: ' + err.message);
+    }
+  });
+
+  // Cancel crop
+  cropCancel.addEventListener('click', () => {
+    cropOverlay.classList.remove('open');
+    cropFile = null;
+  });
+  cropOverlay.addEventListener('click', (e) => {
+    if (cropActive) return;
+    if (e.target === cropOverlay) { cropOverlay.classList.remove('open'); cropFile = null; }
+  });
+
+  // ==================== Auto Save Draft ====================
+  let draftTimer = null;
+  function autoSaveDraft() {
+    clearTimeout(draftTimer);
+    draftTimer = setTimeout(saveDraft, 500);
+  }
+  inputTitle.addEventListener('input', autoSaveDraft);
+  inputContent.addEventListener('input', autoSaveDraft);
+
+  // ==================== Init ====================
+  async function init() {
+    updateDateDisplay();
+
+    // Open IndexedDB
+    try {
+      await openDB();
+    } catch(e) {
+      console.error('IndexedDB failed:', e);
+      showToast('数据库初始化失败，部分功能不可用');
+    }
+
+    // Load entries
+    loadEntries();
+
+    // Load background settings & background
+    loadBgSettings();
+    await loadBackground();
+
+    // Load draft & check today
+    loadDraft();
+    checkTodayEntry();
+
+    // Init voice
+    initVoice();
+
+    // Update date every minute
+    setInterval(updateDateDisplay, 60000);
+
+    // Ctrl+Enter to save
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        btnSave.click();
+      }
+    });
+
+    // ==================== AI Summary (DeepSeek 免费 API) ====================
+    // 🔑 去 https://platform.deepseek.com/ 注册 → API keys → 复制密钥贴到下面
+    const DEEPSEEK_API_KEY = 'sk-9d61b388cbb64a698ca2ea47982c8582';
+
+    const aiSummaryBtn = $('aiSummaryBtn');
+    const aiLoading = $('aiLoading');
+    const aiSummaryCard = $('aiSummaryCard');
+    const aiSummaryText = $('aiSummaryText');
+    const aiSummaryMeta = $('aiSummaryMeta');
+    const aiError = $('aiError');
+
+    // Try loading key from localStorage (user can set their own)
+    const savedDeepSeekKey = localStorage.getItem('deepseek_api_key');
+    const activeKey = savedDeepSeekKey || DEEPSEEK_API_KEY;
+
+    aiSummaryBtn.addEventListener('click', async () => {
+      if (!activeKey) {
+        aiError.textContent = '请先在 script 中设置 DEEPSEEK_API_KEY（去 platform.deepseek.com 免费申请）';
+        aiError.classList.add('show');
+        return;
+      }
+
+      const diaryEntries = entries.slice().reverse();
+      if (diaryEntries.length === 0) {
+        aiError.textContent = '还没有日记，写几篇再试试吧 ✍️';
+        aiError.classList.add('show');
+        return;
+      }
+
+      aiError.classList.remove('show');
+      aiSummaryCard.classList.remove('show');
+      aiLoading.classList.add('show');
+      aiSummaryBtn.disabled = true;
+      aiSummaryBtn.textContent = '⏳ 分析中...';
+
+      try {
+        const recent = diaryEntries.slice(0, 20);
+        const diaryText = recent.map(e =>
+          `【${e.date}】${e.mood || ''}\n${e.title || '无标题'}\n${e.content || ''}`
+        ).join('\n---\n');
+
+        const res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + activeKey
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            max_tokens: 1500,
+            messages: [
+              { role: 'system', content: '你是一个温暖的日记助手。请用中文写一段总结，结构：\n📊 情绪概览\n🔑 关键主题（2-3个）\n💡 温馨建议\n\n语气自然，不评价好坏。' },
+              { role: 'user', content: '请总结我最近的日记：\n\n' + diaryText }
+            ]
+          })
+        });
+
+        aiLoading.classList.remove('show');
+
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          if (res.status === 401) throw new Error('API 密钥无效，请检查 DEEPSEEK_API_KEY');
+          if (res.status === 429) throw new Error('免费额度已用完，稍后再试或更换密钥');
+          throw new Error('请求失败 (' + res.status + ')');
+        }
+
+        const data = await res.json();
+        const summary = data.choices?.[0]?.message?.content || '生成失败';
+
+        aiSummaryText.textContent = summary;
+        const count = Math.min(recent.length, 20);
+        aiSummaryMeta.textContent = `📊 基于 ${count} 篇日记 · 由 DeepSeek 生成`;
+        aiSummaryCard.classList.add('show');
+      } catch (err) {
+        aiLoading.classList.remove('show');
+        aiError.textContent = err.message;
+        aiError.classList.add('show');
+      }
+
+      aiSummaryBtn.disabled = false;
+      aiSummaryBtn.textContent = '✨ 重新生成';
+    });
+  }
+
+  // ==================== Start ====================
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+})();
+</script>
+</body>
+</html>
