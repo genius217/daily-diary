@@ -2250,7 +2250,7 @@ input[type="range"]::-moz-range-thumb {
               ${moodIcon ? `<span class="mood">${moodIcon}</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);">
-              <span class="entry-del-btn" data-entry="${entry.id}" style="cursor:pointer;padding:2px 6px;border-radius:4px;">🗑</span>
+              <span class="entry-del-btn" onclick="event.stopPropagation();window._deleteEntry('${entry.id}')" style="cursor:pointer;padding:2px 6px;border-radius:4px;">🗑</span>
             </div>
           </div>
           <div class="entry-card-title">${entry.title || '无标题'}</div>
@@ -2259,21 +2259,21 @@ input[type="range"]::-moz-range-thumb {
           <div class="entry-detail" id="detail_${entry.id}">
             <div class="entry-detail-time">🕐 ${formatTime(entry.createdAt)}</div>
             <div style="text-align:right;margin-bottom:8px;">
-              <span class="btn btn-ghost edit-entry-btn" data-entry="${entry.id}" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;">✏️ 编辑</span>
+              <span class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;" onclick="event.stopPropagation();window._editEntry('${entry.id}')">✏️ 编辑</span>
             </div>
             <div class="entry-detail-content">${coloredContent}</div>
             <div class="entry-ai-box">
               <div class="entry-ai-bar">
                 <span style="font-size:0.82rem;color:var(--text-muted)">🤖 AI</span>
-                <button class="entry-ai-btn analyze-btn" data-entry="${entry.id}">分析这篇</button>
+                <button class="entry-ai-btn" data-id="${entry.id}" onclick="event.stopPropagation();window._analyzeEntry(this.dataset.id)">分析这篇</button>
                 <span class="entry-ai-spinner" id="aiSpin_${entry.id}"></span>
               </div>
               <div class="entry-ai-summary" id="aiSum_${entry.id}"></div>
               <div class="entry-ai-qa" id="aiQA_${entry.id}">
                 <div class="entry-ai-conv" id="aiConv_${entry.id}"></div>
                 <div class="entry-ai-input-row">
-                  <input type="text" class="ai-question-input" data-entry="${entry.id}" placeholder="追问关于这篇日记的问题...">
-                  <button class="ai-send-btn" data-entry="${entry.id}">发送</button>
+                  <input type="text" id="aiQ_${entry.id}" placeholder="追问关于这篇日记的问题..." onkeydown="if(event.key==='Enter'){event.stopPropagation();window._askAI('${entry.id}')}">
+                  <button id="aiSend_${entry.id}" onclick="event.stopPropagation();window._askAI('${entry.id}')">发送</button>
                 </div>
               </div>
               <div class="entry-ai-error" id="aiErr_${entry.id}"></div>
@@ -2711,22 +2711,6 @@ input[type="range"]::-moz-range-thumb {
     };
   }
 
-    // Capture phase: intercept AI/action button clicks BEFORE card onclick fires
-    document.addEventListener('click', (e) => {
-      const ab = e.target.closest('.analyze-btn');
-      const sb = e.target.closest('.ai-send-btn');
-      const del = e.target.closest('.entry-del-btn');
-      const edit = e.target.closest('.edit-entry-btn');
-      if (ab) { e.stopPropagation(); e.preventDefault(); window._analyzeEntry(ab.dataset.entry); }
-      else if (sb) { e.stopPropagation(); e.preventDefault(); window._askAI(sb.dataset.entry); }
-      else if (del) { e.stopPropagation(); e.preventDefault(); window._deleteEntry(del.dataset.entry); }
-      else if (edit) { e.stopPropagation(); e.preventDefault(); window._editEntry(edit.dataset.entry); }
-    }, true); // capture phase = true
-
-    document.addEventListener('keydown', (e) => {
-      const inp = e.target.closest('.ai-question-input');
-      if (inp && e.key === 'Enter') { e.stopPropagation(); e.preventDefault(); window._askAI(inp.dataset.entry); }
-    }, true);
   }
 
   // ==================== Start ====================
