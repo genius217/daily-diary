@@ -604,62 +604,105 @@ img { display: block; max-width: 100%; }
   justify-content: center;
 }
 
-/* ========== AI Summary ========== */
-.ai-section {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 2px solid var(--border);
+/* ========== Per-Entry AI ========== */
+.entry-ai-box {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
 }
-.ai-header {
+.entry-ai-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-  flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
-.ai-title { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 600; }
-.ai-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 18px; border-radius: var(--radius-sm);
+.entry-ai-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
   background: linear-gradient(135deg, #D4A574, #B8834A);
-  color: #fff; font-size: 0.85rem; font-weight: 500;
+  color: #fff; font-size: 0.82rem; font-weight: 500;
   transition: all var(--transition); border: none; cursor: pointer;
 }
-.ai-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(212,165,116,0.4); }
-.ai-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-.ai-card {
-  background: linear-gradient(135deg, rgba(212,165,116,0.06), rgba(212,165,116,0.12));
-  border-radius: var(--radius); padding: 24px;
-  border: 1px solid rgba(212,165,116,0.2);
-  line-height: 1.8; font-size: 0.95rem;
-  display: none; white-space: pre-wrap;
+.entry-ai-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(212,165,116,0.4); }
+.entry-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.entry-ai-spinner {
+  display: none; width: 16px; height: 16px;
+  border: 2px solid var(--border); border-top-color: var(--primary);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
 }
-.ai-card.show { display: block; animation: fadeSlideIn 0.4s ease; }
-.ai-card .meta {
-  margin-top: 16px; padding-top: 12px;
-  border-top: 1px solid rgba(212,165,116,0.15);
-  font-size: 0.78rem; color: var(--text-muted);
+.entry-ai-spinner.show { display: inline-block; }
+.entry-ai-summary {
+  display: none;
+  font-size: 0.9rem; line-height: 1.7;
+  padding: 12px 16px;
+  background: rgba(212,165,116,0.06);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--primary);
+  white-space: pre-wrap;
+  margin-bottom: 10px;
 }
-.ai-error {
-  color: #e74c3c; font-size: 0.85rem;
-  padding: 12px 16px; background: rgba(231,76,60,0.06);
-  border-radius: var(--radius-sm); margin-top: 10px;
+.entry-ai-summary.show { display: block; }
+.entry-ai-qa {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+}
+.entry-ai-qa.show { display: flex; }
+.entry-ai-conv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.entry-ai-msg {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.entry-ai-msg.user {
+  background: var(--primary-light);
+  align-self: flex-end;
+}
+.entry-ai-msg.assistant {
+  background: rgba(0,0,0,0.03);
+  align-self: flex-start;
+}
+.entry-ai-input-row {
+  display: flex;
+  gap: 8px;
+}
+.entry-ai-input-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  font-size: 0.85rem;
+  background: #fff;
+  color: var(--text);
+}
+.entry-ai-input-row input:focus { border-color: var(--primary); outline: none; }
+.entry-ai-input-row input::placeholder { color: var(--text-muted); }
+.entry-ai-input-row button {
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: all var(--transition); border: none; cursor: pointer;
+  white-space: nowrap;
+}
+.entry-ai-input-row button:hover { background: var(--primary-hover); }
+.entry-ai-input-row button:disabled { opacity: 0.4; cursor: not-allowed; }
+.entry-ai-error {
+  font-size: 0.82rem;
+  color: #e74c3c;
   display: none;
 }
-.ai-error.show { display: block; }
-.ai-loading {
-  display: none; align-items: center; gap: 10px;
-  padding: 16px; font-size: 0.9rem; color: var(--text-secondary);
-}
-.ai-loading.show { display: flex; }
-.ai-loading .spinner {
-  width: 20px; height: 20px;
-  border: 2px solid var(--border);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
+.entry-ai-error.show { display: block; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ========== Image Viewer Modal ========== */
@@ -1125,23 +1168,6 @@ input[type="range"]::-moz-range-thumb {
       <span style="font-size:0.85rem;color:var(--text-secondary)" id="historyCount"></span>
     </div>
     <div id="historyList"></div>
-
-    <!-- AI Summary -->
-    <div class="ai-section">
-      <div class="ai-header">
-        <span class="ai-title">🤖 AI 智能总结</span>
-        <button class="ai-btn" id="aiSummaryBtn">✨ 生成总结</button>
-      </div>
-      <div class="ai-loading" id="aiLoading">
-        <div class="spinner"></div>
-        <span>AI 正在阅读你的日记...</span>
-      </div>
-      <div class="ai-card" id="aiSummaryCard">
-        <div id="aiSummaryText"></div>
-        <div class="meta" id="aiSummaryMeta">基于你的日记内容生成</div>
-      </div>
-      <div class="ai-error" id="aiError"></div>
-    </div>
   </div>
 
 </div>
@@ -1158,6 +1184,8 @@ input[type="range"]::-moz-range-thumb {
   'use strict';
 
   // ==================== Constants ====================
+  // 🔑 DeepSeek 免费 API 密钥 — 去 https://platform.deepseek.com/ 注册获取
+  const DEEPSEEK_API_KEY = 'sk-9d61b388cbb64a698ca2ea47982c8582';
   const DB_NAME = 'DailyDiaryDB';
   const DB_VER = 1;
   const STORE_ENTRY_IMAGES = 'diary_images';
@@ -1800,8 +1828,11 @@ input[type="range"]::-moz-range-thumb {
 
   // ==================== Date Display ====================
   function updateDateDisplay() {
+    const now = new Date();
     const today = getTodayStr();
-    displayDate.textContent = formatDateCN(today);
+    const h = String(now.getHours()).padStart(2,'0');
+    const m = String(now.getMinutes()).padStart(2,'0');
+    displayDate.textContent = `${formatDateCN(today)} ${h}:${m}`;
     displayWeekday.textContent = getWeekday(today);
   }
 
@@ -2215,6 +2246,7 @@ input[type="range"]::-moz-range-thumb {
             <div class="entry-card-date">
               <span>${dateCN}</span>
               <span>${wd}</span>
+              <span style="font-size:0.8rem;color:var(--text-muted)">${formatTime(entry.createdAt)}</span>
               ${moodIcon ? `<span class="mood">${moodIcon}</span>` : ''}
             </div>
             <div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text-muted);">
@@ -2230,6 +2262,22 @@ input[type="range"]::-moz-range-thumb {
               <span class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;" onclick="event.stopPropagation();window._editEntry('${entry.id}')">✏️ 编辑</span>
             </div>
             <div class="entry-detail-content">${coloredContent}</div>
+            <div class="entry-ai-box">
+              <div class="entry-ai-bar">
+                <span style="font-size:0.82rem;color:var(--text-muted)">🤖 AI</span>
+                <button class="entry-ai-btn" data-id="${entry.id}" onclick="window._analyzeEntry('${entry.id}')">分析这篇</button>
+                <span class="entry-ai-spinner" id="aiSpin_${entry.id}"></span>
+              </div>
+              <div class="entry-ai-summary" id="aiSum_${entry.id}"></div>
+              <div class="entry-ai-qa" id="aiQA_${entry.id}">
+                <div class="entry-ai-conv" id="aiConv_${entry.id}"></div>
+                <div class="entry-ai-input-row">
+                  <input type="text" id="aiQ_${entry.id}" placeholder="追问关于这篇日记的问题..." onkeydown="if(event.key==='Enter')window._askAI('${entry.id}')">
+                  <button id="aiSend_${entry.id}" onclick="window._askAI('${entry.id}')">发送</button>
+                </div>
+              </div>
+              <div class="entry-ai-error" id="aiErr_${entry.id}"></div>
+            </div>
           </div>
         </div>
       `;
@@ -2578,88 +2626,89 @@ input[type="range"]::-moz-range-thumb {
       }
     });
 
-    // ==================== AI Summary (DeepSeek 免费 API) ====================
-    // 🔑 去 https://platform.deepseek.com/ 注册 → API keys → 复制密钥贴到下面
-    const DEEPSEEK_API_KEY = 'sk-9d61b388cbb64a698ca2ea47982c8582';
+    // ==================== Per-Entry AI (DeepSeek) ====================
+    const aiContext = {};
 
-    const aiSummaryBtn = $('aiSummaryBtn');
-    const aiLoading = $('aiLoading');
-    const aiSummaryCard = $('aiSummaryCard');
-    const aiSummaryText = $('aiSummaryText');
-    const aiSummaryMeta = $('aiSummaryMeta');
-    const aiError = $('aiError');
+    window._analyzeEntry = async function(entryId) {
+      const entry = getEntryById(entryId);
+      if (!entry) return;
+      if (!DEEPSEEK_API_KEY) { showToast('请先设置 DEEPSEEK_API_KEY'); return; }
 
-    // Try loading key from localStorage (user can set their own)
-    const savedDeepSeekKey = localStorage.getItem('deepseek_api_key');
-    const activeKey = savedDeepSeekKey || DEEPSEEK_API_KEY;
+      const btn = document.querySelector(`.entry-ai-btn[data-id="${entryId}"]`);
+      const spinner = document.getElementById('aiSpin_' + entryId);
+      const sumEl = document.getElementById('aiSum_' + entryId);
+      const qaEl = document.getElementById('aiQA_' + entryId);
+      const errEl = document.getElementById('aiErr_' + entryId);
 
-    aiSummaryBtn.addEventListener('click', async () => {
-      if (!activeKey) {
-        aiError.textContent = '请先在 script 中设置 DEEPSEEK_API_KEY（去 platform.deepseek.com 免费申请）';
-        aiError.classList.add('show');
-        return;
-      }
-
-      const diaryEntries = entries.slice().reverse();
-      if (diaryEntries.length === 0) {
-        aiError.textContent = '还没有日记，写几篇再试试吧 ✍️';
-        aiError.classList.add('show');
-        return;
-      }
-
-      aiError.classList.remove('show');
-      aiSummaryCard.classList.remove('show');
-      aiLoading.classList.add('show');
-      aiSummaryBtn.disabled = true;
-      aiSummaryBtn.textContent = '⏳ 分析中...';
+      if (btn) btn.disabled = true;
+      if (spinner) spinner.classList.add('show');
+      if (sumEl) sumEl.classList.remove('show');
+      if (errEl) errEl.classList.remove('show');
+      if (qaEl) qaEl.classList.remove('show');
 
       try {
-        const recent = diaryEntries.slice(0, 20);
-        const diaryText = recent.map(e =>
-          `【${e.date}】${e.mood || ''}\n${e.title || '无标题'}\n${e.content || ''}`
-        ).join('\n---\n');
-
+        const text = `日期: ${entry.date}\n标题: ${entry.title || ''}\n内容: ${entry.content || ''}`;
         const res = await fetch('https://api.deepseek.com/chat/completions', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + activeKey
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_API_KEY },
           body: JSON.stringify({
-            model: 'deepseek-chat',
-            max_tokens: 1500,
+            model: 'deepseek-chat', max_tokens: 1000,
             messages: [
-              { role: 'system', content: '你是一个温暖的日记助手。请用中文写一段总结，结构：\n📊 情绪概览\n🔑 关键主题（2-3个）\n💡 温馨建议\n\n语气自然，不评价好坏。' },
-              { role: 'user', content: '请总结我最近的日记：\n\n' + diaryText }
+              { role: 'system', content: '你是一个温暖的日记助手。用中文分析这篇日记，给出：\n📊 简要分析\n💡 一点小建议\n\n简短自然。' },
+              { role: 'user', content: '分析这篇日记：\n\n' + text }
             ]
           })
         });
-
-        aiLoading.classList.remove('show');
-
-        if (!res.ok) {
-          const errText = await res.text().catch(() => '');
-          if (res.status === 401) throw new Error('API 密钥无效，请检查 DEEPSEEK_API_KEY');
-          if (res.status === 429) throw new Error('免费额度已用完，稍后再试或更换密钥');
-          throw new Error('请求失败 (' + res.status + ')');
-        }
-
+        if (spinner) spinner.classList.remove('show');
+        if (!res.ok) throw new Error(res.status === 401 ? 'API 密钥无效' : '请求失败');
         const data = await res.json();
-        const summary = data.choices?.[0]?.message?.content || '生成失败';
-
-        aiSummaryText.textContent = summary;
-        const count = Math.min(recent.length, 20);
-        aiSummaryMeta.textContent = `📊 基于 ${count} 篇日记 · 由 DeepSeek 生成`;
-        aiSummaryCard.classList.add('show');
+        const summary = data.choices?.[0]?.message?.content || '分析失败';
+        if (sumEl) { sumEl.textContent = summary; sumEl.classList.add('show'); }
+        if (qaEl) qaEl.classList.add('show');
+        if (btn) { btn.disabled = false; btn.textContent = '🔄 重新分析'; }
+        aiContext[entryId] = [
+          { role: 'system', content: '你正在和用户讨论他/她的一篇日记。根据日记和聊天记录回答。语气温暖。' },
+          { role: 'user', content: '分析这篇日记：\n\n' + text },
+          { role: 'assistant', content: summary }
+        ];
       } catch (err) {
-        aiLoading.classList.remove('show');
-        aiError.textContent = err.message;
-        aiError.classList.add('show');
+        if (spinner) spinner.classList.remove('show');
+        if (errEl) { errEl.textContent = err.message; errEl.classList.add('show'); }
+        if (btn) btn.disabled = false;
       }
+    };
 
-      aiSummaryBtn.disabled = false;
-      aiSummaryBtn.textContent = '✨ 重新生成';
-    });
+    window._askAI = async function(entryId) {
+      const input = document.getElementById('aiQ_' + entryId);
+      const q = input ? input.value.trim() : '';
+      if (!q) return;
+      const conv = document.getElementById('aiConv_' + entryId);
+      const sendBtn = document.getElementById('aiSend_' + entryId);
+      const userMsg = document.createElement('div');
+      userMsg.className = 'entry-ai-msg user'; userMsg.textContent = q;
+      if (conv) conv.appendChild(userMsg);
+      if (input) input.value = '';
+      if (sendBtn) sendBtn.disabled = true;
+      try {
+        const msgs = aiContext[entryId] || [];
+        msgs.push({ role: 'user', content: q });
+        const res = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_API_KEY },
+          body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 800, messages: msgs })
+        });
+        if (!res.ok) throw new Error('请求失败');
+        const data = await res.json();
+        const answer = data.choices?.[0]?.message?.content || '';
+        const aiMsg = document.createElement('div');
+        aiMsg.className = 'entry-ai-msg assistant'; aiMsg.textContent = answer;
+        if (conv) conv.appendChild(aiMsg);
+        aiContext[entryId] = msgs;
+        aiContext[entryId].push({ role: 'assistant', content: answer });
+        if (conv) conv.scrollTop = conv.scrollHeight;
+      } catch (err) { showToast('追问失败: ' + err.message); }
+      if (sendBtn) sendBtn.disabled = false;
+    };
   }
 
   // ==================== Start ====================
