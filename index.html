@@ -1147,9 +1147,10 @@ input[type="range"]::-moz-range-thumb {
       </div>
 
       <div class="action-bar">
-        <div class="action-left">
+        <div class="action-left" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <button class="btn-voice" id="btnVoice" title="语音输入">🎤</button>
           <span class="voice-status" id="voiceStatus">点击录音</span>
+          <button class="btn btn-ghost" id="btnNewEntry" style="font-size:0.8rem;padding:6px 12px;">✏️ 写新篇</button>
         </div>
         <div class="action-right">
           <button class="btn btn-primary" id="btnSave">💾 保存日记</button>
@@ -1242,6 +1243,7 @@ input[type="range"]::-moz-range-thumb {
   const imageInput = $('imageInput');
   const btnAddImage = $('btnAddImage');
   const btnSave = $('btnSave');
+  const btnNewEntry = $('btnNewEntry');
   const btnVoice = $('btnVoice');
   const voiceStatus = $('voiceStatus');
   const tabWrite = $('tabWrite');
@@ -2055,6 +2057,10 @@ input[type="range"]::-moz-range-thumb {
     else { startVoice(); }
   });
 
+  btnNewEntry.addEventListener('click', () => {
+    window._newEntry();
+  });
+
   // ==================== Save Entry ====================
   btnSave.addEventListener('click', async () => {
     const title = inputTitle.value.trim();
@@ -2241,7 +2247,7 @@ input[type="range"]::-moz-range-thumb {
       const coloredPreview = renderColoredContent((entry.content || '').slice(0, 80), colorRuns);
 
       return `
-        <div class="card entry-card" data-id="${entry.id}" onclick="window._toggleEntryDetail('${entry.id}')">
+        <div class="card entry-card" data-id="${entry.id}">
           <div class="entry-card-header">
             <div class="entry-card-date">
               <span>${dateCN}</span>
@@ -2259,7 +2265,7 @@ input[type="range"]::-moz-range-thumb {
           <div class="entry-detail" id="detail_${entry.id}">
             <div class="entry-detail-time">🕐 ${formatTime(entry.createdAt)}</div>
             <div style="text-align:right;margin-bottom:8px;">
-              <span class="btn btn-ghost" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;" onclick="event.stopPropagation();window._editEntry('${entry.id}')">✏️ 编辑</span>
+              <span class="btn btn-ghost edit-btn" style="font-size:0.78rem;padding:4px 10px;display:inline-flex;" onclick="window._editEntry('${entry.id}')">✏️ 编辑</span>
             </div>
             <div class="entry-detail-content">${coloredContent}</div>
             <div class="entry-ai-box">
@@ -2710,6 +2716,18 @@ input[type="range"]::-moz-range-thumb {
       if (sendBtn) sendBtn.disabled = false;
     };
   }
+
+  // ==================== Card Event Delegation ====================
+  historyList.addEventListener('click', (e) => {
+    const card = e.target.closest('.entry-card');
+    if (!card) return;
+    // AI & action buttons — don't toggle card
+    if (e.target.closest('.entry-ai-box')) return;
+    if (e.target.closest('.entry-del-btn')) return;
+    if (e.target.closest('.edit-btn')) return;
+    // Card body — toggle detail
+    window._toggleEntryDetail(card.dataset.id);
+  });
 
   // ==================== Start ====================
   if (document.readyState === 'loading') {
