@@ -2241,7 +2241,7 @@ input[type="range"]::-moz-range-thumb {
       const coloredPreview = renderColoredContent((entry.content || '').slice(0, 80), colorRuns);
 
       return `
-        <div class="card entry-card" data-id="${entry.id}">
+        <div class="card entry-card" data-id="${entry.id}" onclick="window._toggleEntryDetail('${entry.id}')">
           <div class="entry-card-header">
             <div class="entry-card-date">
               <span>${dateCN}</span>
@@ -2711,9 +2711,8 @@ input[type="range"]::-moz-range-thumb {
     };
   }
 
-    // Delegated events for all card interactions
-    historyList.addEventListener('click', (e) => {
-      const card = e.target.closest('.entry-card');
+    // Capture phase: intercept AI/action button clicks BEFORE card onclick fires
+    document.addEventListener('click', (e) => {
       const ab = e.target.closest('.analyze-btn');
       const sb = e.target.closest('.ai-send-btn');
       const del = e.target.closest('.entry-del-btn');
@@ -2722,12 +2721,12 @@ input[type="range"]::-moz-range-thumb {
       else if (sb) { e.stopPropagation(); e.preventDefault(); window._askAI(sb.dataset.entry); }
       else if (del) { e.stopPropagation(); e.preventDefault(); window._deleteEntry(del.dataset.entry); }
       else if (edit) { e.stopPropagation(); e.preventDefault(); window._editEntry(edit.dataset.entry); }
-      else if (card) { window._toggleEntryDetail(card.dataset.id); }
-    });
-    historyList.addEventListener('keydown', (e) => {
+    }, true); // capture phase = true
+
+    document.addEventListener('keydown', (e) => {
       const inp = e.target.closest('.ai-question-input');
       if (inp && e.key === 'Enter') { e.stopPropagation(); e.preventDefault(); window._askAI(inp.dataset.entry); }
-    });
+    }, true);
   }
 
   // ==================== Start ====================
