@@ -2265,15 +2265,15 @@ input[type="range"]::-moz-range-thumb {
             <div class="entry-ai-box">
               <div class="entry-ai-bar">
                 <span style="font-size:0.82rem;color:var(--text-muted)">🤖 AI</span>
-                <button class="entry-ai-btn" data-id="${entry.id}" onclick="event.stopPropagation();window._analyzeEntry('${entry.id}')">分析这篇</button>
+                <button class="entry-ai-btn analyze-btn" data-entry="${entry.id}">分析这篇</button>
                 <span class="entry-ai-spinner" id="aiSpin_${entry.id}"></span>
               </div>
               <div class="entry-ai-summary" id="aiSum_${entry.id}"></div>
               <div class="entry-ai-qa" id="aiQA_${entry.id}">
                 <div class="entry-ai-conv" id="aiConv_${entry.id}"></div>
                 <div class="entry-ai-input-row">
-                  <input type="text" id="aiQ_${entry.id}" placeholder="追问关于这篇日记的问题..." onkeydown="if(event.key==='Enter'){event.stopPropagation();window._askAI('${entry.id}')}">
-                  <button id="aiSend_${entry.id}" onclick="event.stopPropagation();window._askAI('${entry.id}')">发送</button>
+                  <input type="text" class="ai-question-input" data-entry="${entry.id}" placeholder="追问关于这篇日记的问题...">
+                  <button class="ai-send-btn" data-entry="${entry.id}">发送</button>
                 </div>
               </div>
               <div class="entry-ai-error" id="aiErr_${entry.id}"></div>
@@ -2709,6 +2709,19 @@ input[type="range"]::-moz-range-thumb {
       } catch (err) { showToast('追问失败: ' + err.message); }
       if (sendBtn) sendBtn.disabled = false;
     };
+  }
+
+    // Delegated events for AI buttons
+    historyList.addEventListener('click', (e) => {
+      const ab = e.target.closest('.analyze-btn');
+      const sb = e.target.closest('.ai-send-btn');
+      if (ab) { e.stopPropagation(); window._analyzeEntry(ab.dataset.entry); }
+      else if (sb) { e.stopPropagation(); window._askAI(sb.dataset.entry); }
+    });
+    historyList.addEventListener('keydown', (e) => {
+      const inp = e.target.closest('.ai-question-input');
+      if (inp && e.key === 'Enter') { e.stopPropagation(); window._askAI(inp.dataset.entry); }
+    });
   }
 
   // ==================== Start ====================
