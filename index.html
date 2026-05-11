@@ -2381,6 +2381,31 @@ input[type="range"]::-moz-range-thumb {
 
   document.addEventListener('mouseup', () => { cropDragging = false; });
 
+  // Touch support for mobile
+  cropFrame.addEventListener('touchstart', (e) => {
+    const t = e.touches[0];
+    cropDragging = true;
+    cropStartX = t.clientX;
+    cropStartY = t.clientY;
+    cropStartLeft = parseFloat(cropFrame.style.left) || 0;
+    cropStartTop = parseFloat(cropFrame.style.top) || 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (!cropDragging) return;
+    const t = e.touches[0];
+    const cw = cropWrap.clientWidth;
+    const ch = cropWrap.clientHeight;
+    const fw = parseFloat(cropFrame.style.width) || 0;
+    const fh = parseFloat(cropFrame.style.height) || 0;
+    let nl = cropStartLeft + (t.clientX - cropStartX);
+    let nt = cropStartTop + (t.clientY - cropStartY);
+    nl = Math.max(0, Math.min(cw - fw, nl));
+    nt = Math.max(0, Math.min(ch - fh, nt));
+    cropFrame.style.left = nl + 'px';
+    cropFrame.style.top = nt + 'px';
+  }, { passive: true });
+  document.addEventListener('touchend', () => { cropDragging = false; }, { passive: true });
+
   // Confirm crop
   cropConfirm.addEventListener('click', async () => {
     if (!cropFile) return;
