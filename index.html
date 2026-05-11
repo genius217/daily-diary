@@ -535,75 +535,6 @@ img { display: block; max-width: 100%; }
 }
 
 /* ========== Replies ========== */
-/* ========== Crop Modal ========== */
-.crop-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.85);
-  z-index: 9999;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  padding: 20px;
-}
-.crop-overlay.open { display: flex; }
-.crop-wrap {
-  position: relative;
-  max-width: 95vw;
-  max-height: 70vh;
-  overflow: hidden;
-  border-radius: var(--radius-sm);
-  line-height: 0;
-  user-select: none;
-}
-.crop-wrap img {
-  display: block;
-  max-width: 95vw;
-  max-height: 70vh;
-}
-.crop-frame {
-  position: absolute;
-  border: 2px dashed #fff;
-  cursor: move;
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-}
-.crop-frame.dragging { border-color: var(--primary); }
-.crop-handle {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  border: 2px solid var(--primary);
-  border-radius: 50%;
-  z-index: 2;
-}
-.crop-handle.tl { top: -8px; left: -8px; cursor: nw-resize; }
-.crop-handle.tr { top: -8px; right: -8px; cursor: ne-resize; }
-.crop-handle.bl { bottom: -8px; left: -8px; cursor: sw-resize; }
-.crop-handle.br { bottom: -8px; right: -8px; cursor: se-resize; }
-.crop-info {
-  color: #fff;
-  font-size: 0.8rem;
-  margin-top: 12px;
-  opacity: 0.7;
-}
-.crop-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 14px;
-}
-.crop-actions .btn {
-  padding: 10px 28px;
-  font-size: 0.9rem;
-  min-width: 100px;
-  justify-content: center;
-}
-
 /* ========== Per-Entry AI ========== */
 .entry-ai-box {
   margin-top: 14px;
@@ -1055,24 +986,6 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- Crop Modal for Background -->
-<div class="crop-overlay" id="cropOverlay">
-  <div class="crop-wrap" id="cropWrap">
-    <img id="cropImage" src="" alt="裁剪">
-    <div class="crop-frame" id="cropFrame">
-      <span class="crop-handle tl"></span>
-      <span class="crop-handle tr"></span>
-      <span class="crop-handle bl"></span>
-      <span class="crop-handle br"></span>
-    </div>
-  </div>
-  <div class="crop-info">🖱️ 拖动选区移动 · 拖拽角点缩放</div>
-  <div class="crop-actions">
-    <button class="btn btn-ghost" id="cropCancel" style="color:#fff;border-color:rgba(255,255,255,0.3);">取消</button>
-    <button class="btn btn-primary" id="cropConfirm">✅ 确认裁剪</button>
-  </div>
-</div>
-
 <div class="app-container">
 
   <!-- ========== Header ========== -->
@@ -1217,11 +1130,6 @@ input[type="range"]::-moz-range-thumb {
   // Confirm dialog promise resolver
   let confirmResolver = null;
   let expandedEntryId = null;
-  // Crop state
-  let cropFile = null;
-  let cropActive = false;
-  let cropStartX = 0, cropStartY = 0;
-  let cropStartRect = { left: 0, top: 0, width: 0, height: 0 };
 
   // Background settings
   let bgSettings = {
@@ -1279,12 +1187,6 @@ input[type="range"]::-moz-range-thumb {
   const opacityValue = $('opacityValue');
   const bgResetBtn = $('bgResetBtn');
   const bgUploadBtn = $('bgUploadBtn');
-  const cropOverlay = $('cropOverlay');
-  const cropWrap = $('cropWrap');
-  const cropImage = $('cropImage');
-  const cropFrame = $('cropFrame');
-  const cropConfirm = $('cropConfirm');
-  const cropCancel = $('cropCancel');
   const colorOverlay = $('colorOverlay');
 
   // ==================== Toast ====================
@@ -2382,207 +2284,20 @@ input[type="range"]::-moz-range-thumb {
     bgInput.click();
   });
 
-  bgInput.addEventListener('change', (e) => {
+  bgInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    cropFile = file;
-    cropOverlay.classList.add('open'); // Show overlay FIRST so dimensions are available
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      cropImage.onload = () => {
-        // Image loaded, now measure and set initial frame
-        const cw = cropWrap.clientWidth;
-        const ch = cropWrap.clientHeight;
-        // Initial frame: 60% of image, centered
-        const pct = 0.6;
-        const fw = Math.round(cw * pct);
-        const fh = Math.round(ch * pct);
-        const fl = Math.round((cw - fw) / 2);
-        const ft = Math.round((ch - fh) / 2);
-        cropStartRect = { left: fl, top: ft, width: fw, height: fh };
-        cropFrame.style.left = fl + 'px';
-        cropFrame.style.top = ft + 'px';
-        cropFrame.style.width = fw + 'px';
-        cropFrame.style.height = fh + 'px';
-      };
-      cropImage.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-    bgInput.value = '';
-  });
-
-  // ==================== Crop Logic ====================
-  // Always calculate from cropStartRect + current delta for smooth dragging
-  function applyCropRect(r) {
-    r.left = Math.round(r.left);
-    r.top = Math.round(r.top);
-    r.width = Math.round(r.width);
-    r.height = Math.round(r.height);
-    cropFrame.style.left = r.left + 'px';
-    cropFrame.style.top = r.top + 'px';
-    cropFrame.style.width = r.width + 'px';
-    cropFrame.style.height = r.height + 'px';
-  }
-
-  function constrain(n, min, max) { return Math.max(min, Math.min(max, n)); }
-
-  function doCropDrag(e) {
-    if (!cropActive) return;
-    const dx = e.clientX - cropStartX;
-    const dy = e.clientY - cropStartY;
-    const s = cropStartRect;
-    const cw = cropWrap.clientWidth;
-    const ch = cropWrap.clientHeight;
-    const MIN = 60;
-    let r;
-
-    if (cropActive === 'move') {
-      r = {
-        left: constrain(s.left + dx, 0, cw - s.width),
-        top: constrain(s.top + dy, 0, ch - s.height),
-        width: s.width,
-        height: s.height
-      };
-    } else if (cropActive === 'resize-br') {
-      r = {
-        left: s.left,
-        top: s.top,
-        width: constrain(s.width + dx, MIN, cw - s.left),
-        height: constrain(s.height + dy, MIN, ch - s.top)
-      };
-    } else if (cropActive === 'resize-tl') {
-      const nl = constrain(s.left + dx, 0, s.left + s.width - MIN);
-      const nt = constrain(s.top + dy, 0, s.top + s.height - MIN);
-      r = {
-        left: nl, top: nt,
-        width: s.left + s.width - nl,
-        height: s.top + s.height - nt
-      };
-    } else if (cropActive === 'resize-tr') {
-      const nt = constrain(s.top + dy, 0, s.top + s.height - MIN);
-      r = {
-        left: s.left, top: nt,
-        width: constrain(s.width + dx, MIN, cw - s.left),
-        height: s.top + s.height - nt
-      };
-    } else if (cropActive === 'resize-bl') {
-      const nl = constrain(s.left + dx, 0, s.left + s.width - MIN);
-      r = {
-        left: nl, top: s.top,
-        width: s.left + s.width - nl,
-        height: constrain(s.height + dy, MIN, ch - s.top)
-      };
-    }
-    if (r) applyCropRect(r);
-  }
-
-  // Frame mouse down → move
-  cropFrame.addEventListener('mousedown', (e) => {
-    if (e.target.classList.contains('crop-handle')) return;
-    e.preventDefault();
-    const cs = cropFrame.style;
-    cropStartRect = {
-      left: parseFloat(cs.left) || 0,
-      top: parseFloat(cs.top) || 0,
-      width: parseFloat(cs.width) || 0,
-      height: parseFloat(cs.height) || 0
-    };
-    cropActive = 'move';
-    cropStartX = e.clientX;
-    cropStartY = e.clientY;
-    cropFrame.classList.add('dragging');
-  });
-
-  // Handle mouse down → resize
-  cropFrame.querySelectorAll('.crop-handle').forEach(h => {
-    h.addEventListener('mousedown', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const dir = Array.from(h.classList).find(c => ['tl','tr','bl','br'].includes(c));
-      if (!dir) return;
-      const cs = cropFrame.style;
-      cropStartRect = {
-        left: parseFloat(cs.left) || 0,
-        top: parseFloat(cs.top) || 0,
-        width: parseFloat(cs.width) || 0,
-        height: parseFloat(cs.height) || 0
-      };
-      cropActive = 'resize-' + dir;
-      cropStartX = e.clientX;
-      cropStartY = e.clientY;
-      cropFrame.classList.add('dragging');
-    });
-  });
-
-  // Global mousemove
-  document.addEventListener('mousemove', doCropDrag);
-
-  // Global mouseup
-  document.addEventListener('mouseup', () => {
-    if (cropActive) {
-      cropActive = false;
-      cropFrame.classList.remove('dragging');
-    }
-  });
-
-  // Touch support for mobile
-  cropFrame.addEventListener('touchstart', (e) => {
-    const touch = e.touches[0];
-    const me = new MouseEvent('mousedown', { clientX: touch.clientX, clientY: touch.clientY });
-    cropFrame.dispatchEvent(me);
-  }, { passive: true });
-  document.addEventListener('touchmove', (e) => {
-    if (!cropActive) return;
-    const touch = e.touches[0];
-    const me = new MouseEvent('mousemove', { clientX: touch.clientX, clientY: touch.clientY });
-    doCropDrag(me);
-  }, { passive: true });
-  document.addEventListener('touchend', () => {
-    if (cropActive) {
-      cropActive = false;
-      cropFrame.classList.remove('dragging');
-    }
-  }, { passive: true });
-
-  // Confirm crop
-  cropConfirm.addEventListener('click', async () => {
-    if (!cropFile) return;
-    const cs = cropFrame.style;
-    const r = {
-      left: parseFloat(cs.left) || 0,
-      top: parseFloat(cs.top) || 0,
-      width: parseFloat(cs.width) || 0,
-      height: parseFloat(cs.height) || 0
-    };
-    const img = cropImage;
-    const scaleX = img.naturalWidth / img.clientWidth;
-    const scaleY = img.naturalHeight / img.clientHeight;
-    const sx = r.left * scaleX, sy = r.top * scaleY;
-    const sw = r.width * scaleX, sh = r.height * scaleY;
-
     try {
-      showToast('正在裁剪...');
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.min(sw, MAX_IMG_W);
-      canvas.height = sh * (canvas.width / sw);
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY);
+      showToast('正在处理图片...');
+      const dataUrl = await compressImage(file);
       await saveBackground(dataUrl);
-      cropOverlay.classList.remove('open');
       closeBgPanel();
       showToast('✅ 背景已更换');
     } catch(err) {
-      showToast('裁剪失败: ' + err.message);
+      showToast('背景设置失败: ' + err.message);
     }
+    bgInput.value = '';
   });
-
-  // Cancel crop
-  cropCancel.addEventListener('click', () => {
-    cropOverlay.classList.remove('open');
-    cropFile = null;
-  });
-  // Removed: overlay click-to-close (interfered with crop drag)
 
   // ==================== Auto Save Draft ====================
   let draftTimer = null;
