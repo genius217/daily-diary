@@ -2383,15 +2383,17 @@ input[type="range"]::-moz-range-thumb {
 
   // Touch support for mobile
   cropFrame.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     const t = e.touches[0];
     cropDragging = true;
     cropStartX = t.clientX;
     cropStartY = t.clientY;
     cropStartLeft = parseFloat(cropFrame.style.left) || 0;
     cropStartTop = parseFloat(cropFrame.style.top) || 0;
-  }, { passive: true });
+  }, { passive: false });
   document.addEventListener('touchmove', (e) => {
     if (!cropDragging) return;
+    e.preventDefault();
     const t = e.touches[0];
     const cw = cropWrap.clientWidth;
     const ch = cropWrap.clientHeight;
@@ -2403,7 +2405,7 @@ input[type="range"]::-moz-range-thumb {
     nt = Math.max(0, Math.min(ch - fh, nt));
     cropFrame.style.left = nl + 'px';
     cropFrame.style.top = nt + 'px';
-  }, { passive: true });
+  }, { passive: false });
   document.addEventListener('touchend', () => { cropDragging = false; }, { passive: true });
 
   // Confirm crop
