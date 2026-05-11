@@ -535,6 +535,27 @@ img { display: block; max-width: 100%; }
 }
 
 /* ========== Replies ========== */
+/* ========== Simple Crop ========== */
+.crop-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+  z-index: 9999; display: none; align-items: center;
+  justify-content: center; flex-direction: column; padding: 20px;
+}
+.crop-overlay.open { display: flex; }
+.crop-wrap {
+  position: relative; max-width: 95vw; max-height: 70vh;
+  overflow: hidden; border-radius: var(--radius-sm); line-height: 0;
+  user-select: none;
+}
+.crop-wrap img { display: block; max-width: 95vw; max-height: 70vh; }
+.crop-frame {
+  position: absolute; border: 2px solid #fff;
+  cursor: move; box-shadow: 0 0 0 9999px rgba(0,0,0,0.55);
+}
+.crop-info { color: #fff; font-size: 0.8rem; margin-top: 12px; opacity: 0.7; }
+.crop-actions { display: flex; gap: 12px; margin-top: 14px; }
+.crop-actions .btn { padding: 10px 28px; font-size: 0.9rem; min-width: 100px; justify-content: center; }
+
 /* ========== Per-Entry AI ========== */
 .entry-ai-box {
   margin-top: 14px;
@@ -912,11 +933,11 @@ input[type="range"]::-moz-range-thumb {
 <!-- Confirm Dialog -->
 <div class="confirm-overlay" id="confirmDialog">
   <div class="confirm-dialog">
-    <div class="confirm-title">确认删除</div>
-    <div class="confirm-desc" id="confirmDesc">确定要删除这篇日记吗？此操作不可撤销。</div>
+    <div class="confirm-title">确认更换</div>
+    <div class="confirm-desc" id="confirmDesc">确定要更换这篇日记吗？</div>
     <div class="confirm-actions">
       <button class="btn btn-ghost" id="confirmCancel">取消</button>
-      <button class="btn btn-danger" id="confirmOk">删除</button>
+      <button class="btn btn-danger" id="confirmOk">确定</button>
     </div>
   </div>
 </div>
@@ -983,6 +1004,19 @@ input[type="range"]::-moz-range-thumb {
       <button class="btn btn-ghost" id="bgResetBtn">↺ 恢复默认</button>
       <button class="btn btn-primary" id="bgUploadBtn">📷 上传图片</button>
     </div>
+  </div>
+</div>
+
+<!-- Simple Crop -->
+<div class="crop-overlay" id="cropOverlay">
+  <div class="crop-wrap" id="cropWrap">
+    <img id="cropImage" src="" alt="裁剪">
+    <div class="crop-frame" id="cropFrame"></div>
+  </div>
+  <div class="crop-info">🖱️ 拖动选框选择区域</div>
+  <div class="crop-actions">
+    <button class="btn btn-ghost" id="cropCancel" style="color:#fff;border-color:rgba(255,255,255,0.3);">取消</button>
+    <button class="btn btn-primary" id="cropConfirm">✅ 确认</button>
   </div>
 </div>
 
@@ -1130,6 +1164,11 @@ input[type="range"]::-moz-range-thumb {
   // Confirm dialog promise resolver
   let confirmResolver = null;
   let expandedEntryId = null;
+  // Crop state
+  let cropFile = null;
+  let cropDragging = false;
+  let cropStartX = 0, cropStartY = 0;
+  let cropStartLeft = 0, cropStartTop = 0;
 
   // Background settings
   let bgSettings = {
@@ -1187,6 +1226,12 @@ input[type="range"]::-moz-range-thumb {
   const opacityValue = $('opacityValue');
   const bgResetBtn = $('bgResetBtn');
   const bgUploadBtn = $('bgUploadBtn');
+  const cropOverlay = $('cropOverlay');
+  const cropWrap = $('cropWrap');
+  const cropImage = $('cropImage');
+  const cropFrame = $('cropFrame');
+  const cropConfirm = $('cropConfirm');
+  const cropCancel = $('cropCancel');
   const colorOverlay = $('colorOverlay');
 
   // ==================== Toast ====================
@@ -2284,19 +2329,91 @@ input[type="range"]::-moz-range-thumb {
     bgInput.click();
   });
 
-  bgInput.addEventListener('change', async (e) => {
+  bgInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    cropFile = file;
+    cropOverlay.classList.add('open');
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      cropImage.onload = () => {
+        // Fixed frame: 70% width, centered, page-like aspect ratio
+        const cw = cropWrap.clientWidth;
+        const ch = cropWrap.clientHeight;
+        const fw = Math.round(cw * 0.7);
+        const fh = Math.round(fw * 0.7); // square-ish, adjust as needed
+        const fl = Math.round((cw - fw) / 2);
+        const ft = Math.round((ch - fh) / 2);
+        cropFrame.style.left = fl + 'px';
+        cropFrame.style.top = ft + 'px';
+        cropFrame.style.width = fw + 'px';
+        cropFrame.style.height = fh + 'px';
+      };
+      cropImage.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    bgInput.value = '';
+  });
+
+  // ==================== Simple Crop: Drag Only ====================
+  cropFrame.addEventListener('mousedown', (e) => {
+    e.preventDefault();
+    cropDragging = true;
+    cropStartX = e.clientX;
+    cropStartY = e.clientY;
+    cropStartLeft = parseFloat(cropFrame.style.left) || 0;
+    cropStartTop = parseFloat(cropFrame.style.top) || 0;
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!cropDragging) return;
+    const cw = cropWrap.clientWidth;
+    const ch = cropWrap.clientHeight;
+    const fw = parseFloat(cropFrame.style.width) || 0;
+    const fh = parseFloat(cropFrame.style.height) || 0;
+    let nl = cropStartLeft + (e.clientX - cropStartX);
+    let nt = cropStartTop + (e.clientY - cropStartY);
+    nl = Math.max(0, Math.min(cw - fw, nl));
+    nt = Math.max(0, Math.min(ch - fh, nt));
+    cropFrame.style.left = nl + 'px';
+    cropFrame.style.top = nt + 'px';
+  });
+
+  document.addEventListener('mouseup', () => { cropDragging = false; });
+
+  // Confirm crop
+  cropConfirm.addEventListener('click', async () => {
+    if (!cropFile) return;
+    const cs = cropFrame.style;
+    const rl = parseFloat(cs.left) || 0, rt = parseFloat(cs.top) || 0;
+    const rw = parseFloat(cs.width) || 0, rh = parseFloat(cs.height) || 0;
+    if (rw === 0 || rh === 0) { showToast('裁剪框无效'); return; }
     try {
-      showToast('正在处理图片...');
-      const dataUrl = await compressImage(file);
+      showToast('正在裁剪...');
+      const img = cropImage;
+      const sx = rl * (img.naturalWidth / img.clientWidth);
+      const sy = rt * (img.naturalHeight / img.clientHeight);
+      const sw = rw * (img.naturalWidth / img.clientWidth);
+      const sh = rh * (img.naturalHeight / img.clientHeight);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.min(sw, MAX_IMG_W);
+      canvas.height = sh * (canvas.width / sw);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', IMG_QUALITY);
       await saveBackground(dataUrl);
+      cropOverlay.classList.remove('open');
       closeBgPanel();
       showToast('✅ 背景已更换');
     } catch(err) {
-      showToast('背景设置失败: ' + err.message);
+      showToast('裁剪失败: ' + err.message);
     }
-    bgInput.value = '';
+  });
+
+  // Cancel crop
+  cropCancel.addEventListener('click', () => {
+    cropOverlay.classList.remove('open');
+    cropFile = null;
   });
 
   // ==================== Auto Save Draft ====================
