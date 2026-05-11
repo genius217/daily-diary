@@ -2582,10 +2582,7 @@ input[type="range"]::-moz-range-thumb {
     cropOverlay.classList.remove('open');
     cropFile = null;
   });
-  cropOverlay.addEventListener('click', (e) => {
-    if (cropActive) return;
-    if (e.target === cropOverlay) { cropOverlay.classList.remove('open'); cropFile = null; }
-  });
+  // Removed: overlay click-to-close (interfered with crop drag)
 
   // ==================== Auto Save Draft ====================
   let draftTimer = null;
